@@ -42,21 +42,3 @@ df = pd_data[['name','latitude','longitude']]
 df_lat = df["latitude"].values.tolist()
 df_lon = df["longitude"].values.tolist()
 name_obj = df["name"].values.tolist()
-
-
-
-# def geo_to_h3(row):
-#     H3_res = 9
-#     try:
-#         # Конвертируем значения в float, если они еще не в числовом формате
-#         lat = float(row.lat)
-#         lng = float(row.lng)
-#         return h3.latlng_to_cell(lat=lat, lng=lng, res=H3_res)#добавили полигоны с id, каждая координата теперь числится в каком-то полигоне
-#     except ValueError:
-#         # Возвращаем None, если не удается сконвертировать значение
-#         return None
-
-# # Применяем функцию к DataFrame
-# df['h3_cell'] = df.apply(geo_to_h3, axis=1)
-# h = "89254587117ffff" 
-# print(h3.cell_to_boundary(h))
