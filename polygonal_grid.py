@@ -7,6 +7,7 @@ import h3pandas
 from connect_bd import df_lat, df_lon, name_obj
 import h3
 from shapely.geometry import Polygon
+#changes
 # Ольхон и его границы
 place = "остров Ольхон"
 gdf = ox.geocode_to_gdf(place, which_result=1) 
