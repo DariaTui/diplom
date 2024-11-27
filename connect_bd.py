@@ -37,8 +37,7 @@ query="SELECT name,latitude,longitude FROM sights_olkhon"
 pd_data = pd.read_sql(query,connection)
 
 df = pd_data[['name','latitude','longitude']]
-#df = pd_data.rename(columns={"lat":"lat","lon":"lng"})
-#lat_lng=df[['lat','lon']]
+
 df_lat = df["latitude"].values.tolist()
 df_lon = df["longitude"].values.tolist()
 name_obj = df["name"].values.tolist()

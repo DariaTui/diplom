@@ -14,6 +14,7 @@ df_olkhon["h3_8"] = df_olkhon.apply(lambda row: h3.geo_to_h3(row["lat"], row["ln
 
 # Подсчитаем количество объектов в каждом H3-гексагоне
 df_olkhon['object_count'] = df_olkhon.groupby('h3_8')['name'].transform('count')
-
+n = h3.k_ring(df_olkhon["h3_8"],k=1)
 # Проверим результат
 print(df_olkhon)
+print(n)

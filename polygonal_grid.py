@@ -30,8 +30,6 @@ obj_hex["geometry"] = obj_hex["h3_8"].apply(
     lambda h3_index: Polygon(h3.h3_to_geo_boundary(h3_index, geo_json=True))
 )
 
-obj_hex = gpd.GeoDataFrame(obj_hex, geometry="geometry", crs="EPSG:4326")
-
 # # Джойним полигоны объектов и полигоны местности (сетки)
 # sjoin_hex = gpd.sjoin(olhon_hex, obj_hex, how='left')
 
@@ -44,13 +42,34 @@ m = folium.Map([gdf.centroid.y, gdf.centroid.x])
 # Функция для выбора цвета в зависимости от количества объектов
 def get_color(count):
     if count > 1:
-        return "red"  # Более яркий цвет для полигонов с >1 объектами
+        return "red"  # Более яркий цвет для полигонов с > 1 объектами
     elif count == 1:
         return "yellow"  # Нейтральный цвет для 1 объекта
     else:
         return "green"  # Стандартный цвет, если объектов нет
 
 folium.GeoJson(olhon_hex, color="green").add_to(m)
+
+# Находим соседние полигоны в olhon_hex и окрашиваем их в голубой цвет
+used_neighbors = set()  # Для исключения дублирования
+for i, r in obj_hex.iterrows():
+    if r["object_count"] > 0:  # Только для гексов с объектами
+        neighbors = h3.k_ring(r["h3_8"], k=1)  # Находим соседей
+        print("r[h3_8] ", r["h3_8"],"neigbors ", neighbors)
+        used_neighbors.add(r["h3_8"]) #Чтобы не закрашивались полигоны которые уже имеют объекты
+        for neighbor in neighbors:
+            if neighbor != r["h3_8"] and neighbor in olhon_hex.index:  # Сосед из olhon_hex
+                if neighbor not in used_neighbors:
+                    neighbor_geom = Polygon(h3.h3_to_geo_boundary(neighbor, geo_json=True))
+                    folium.GeoJson(
+                        data=neighbor_geom.__geo_interface__,
+                        style_function=lambda feature: {
+                            "color": "blue",  # Голубой цвет для соседей
+                            "weight": 1,
+                            "fillOpacity": 0.3,
+                        },
+                    ).add_to(m)
+                    used_neighbors.add(neighbor)
 
 for i,r in obj_hex.iterrows():# i = id , r = count_object(значению)
     folium.GeoJson(
