@@ -12,7 +12,6 @@ from shapely.geometry import Polygon
 place = "остров Ольхон"
 gdf = ox.geocode_to_gdf(place, which_result=1) 
 olhon_hex = gdf.h3.polyfill_resample(8)
-
 # создается dataFrame с переданными данными 
 df_olkhon = pd.DataFrame({"lat": df_lat, "lng": df_lon, "name":name_obj})
 # создается столбец h3_8
@@ -29,12 +28,6 @@ obj_hex = df_olkhon[["h3_8","object_count"]].drop_duplicates()
 obj_hex["geometry"] = obj_hex["h3_8"].apply(
     lambda h3_index: Polygon(h3.h3_to_geo_boundary(h3_index, geo_json=True))
 )
-
-# # Джойним полигоны объектов и полигоны местности (сетки)
-# sjoin_hex = gpd.sjoin(olhon_hex, obj_hex, how='left')
-
-# # Считаем количество объектов в каждом гексагоне
-# sjoin_hex['object_count'] = sjoin_hex.groupby('index')['index_right'].transform('count').fillna(0)
 
 # Создаем карту
 m = folium.Map([gdf.centroid.y, gdf.centroid.x])
