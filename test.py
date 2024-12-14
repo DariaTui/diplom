@@ -1,20 +1,46 @@
-import pandas as pd
-import h3
+import osmnx as ox
+import folium
+import networkx as nx
+import webbrowser
+from polygonal_grid import df_olkhon, place, m 
 
+ox.config(log_console=True, use_cache=True)
+# define the start and end locations in latlng
+start_latlng = (df_olkhon["lat"][0],df_olkhon["lng"][0])
+end_latlng = (df_olkhon["lat"][1],df_olkhon["lng"][1])
 
-# Пример DataFrame с данными
-df_olkhon = pd.DataFrame({
-    "name": ["Заслонка", "Скала Саган-Заба", "Мишкина гора"], 
-    "lat": [52.60186, 52.67825, 52.54578], 
-    "lng": [105.75050, 106.46595, 106.03729]
-})
+# кратчайший маршрут в зависимости от способа передвижения
+mode = "walk" # 'drive', 'bike', 'walk'
 
-# Преобразуем координаты в H3
-df_olkhon["h3_8"] = df_olkhon.apply(lambda row: h3.geo_to_h3(row["lat"], row["lng"], 8), axis=1)
+# найти кратчайший путь в зависимости от расстояния или времени
+optimizer = 'length' # 'length','time'
 
-# Подсчитаем количество объектов в каждом H3-гексагоне
-df_olkhon['object_count'] = df_olkhon.groupby('h3_8')['name'].transform('count')
-n = h3.k_ring(df_olkhon["h3_8"],k=1)
-# Проверим результат
-print(df_olkhon)
-print(n)
+# создать график из OSM в границах некоторого геокодируемого места
+graph = ox.graph_from_place(place, network_type = mode)
+
+# найти ближайший узел к начальной локации
+orig_node = ox.nearest_nodes(graph, df_olkhon["lat"][0],df_olkhon["lng"][0])
+
+# найти ближайший узел к конечной локации
+dest_node  = ox.nearest_nodes(graph, df_olkhon["lat"][1],df_olkhon["lng"][1])
+
+#нахождение крайчайшего расстояния
+shortest_route = nx.shortest_path(graph, orig_node, dest_node, weight=optimizer)
+
+#shortest_route_map=ox.graph_to_gdfs(graph,shortest_route)
+#--Задачи--
+#найти способ перевести данные shortest_route_map в geoJson
+#почему при преобразовании список пуст ?
+route_edges = list(zip(shortest_route[:-1], shortest_route[1:]))
+nodes, edges = ox.graph_to_gdfs(graph)
+edges_route = edges.loc[edges.index.isin(list(zip(shortest_route[:-1], shortest_route[1:])))]
+
+print(edges_route)
+# Добавление маршрута
+folium.GeoJson(edges_route).add_to(m)
+
+#folium.GeoJson(shortest_route_map).add_to(m)
+
+m.save("test_map.html")
+webbrowser.open("test_map.html")
+

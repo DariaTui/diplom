@@ -41,50 +41,55 @@ def get_color(count):
     else:
         return "green"  # Стандартный цвет, если объектов нет
 
-folium.GeoJson(olhon_hex, color="green").add_to(m)
+def main():
 
-# Находим соседние полигоны в olhon_hex и окрашиваем их в голубой цвет
-used_neighbors = set()  # Для исключения дублирования
-for i, r in obj_hex.iterrows():
-    if r["object_count"] > 0:  # Только для гексов с объектами
-        neighbors = h3.k_ring(r["h3_8"], k=1)  # Находим соседей
-        print("r[h3_8] ", r["h3_8"],"neigbors ", neighbors)
-        used_neighbors.add(r["h3_8"]) #Чтобы не закрашивались полигоны которые уже имеют объекты
-        for neighbor in neighbors:
-            if neighbor != r["h3_8"] and neighbor in olhon_hex.index:  # Сосед из olhon_hex
-                if neighbor not in used_neighbors:
-                    neighbor_geom = Polygon(h3.h3_to_geo_boundary(neighbor, geo_json=True))
-                    folium.GeoJson(
-                        data=neighbor_geom.__geo_interface__,
-                        style_function=lambda feature: {
-                            "color": "blue",  # Голубой цвет для соседей
-                            "weight": 1,
-                            "fillOpacity": 0.3,
-                        },
-                    ).add_to(m)
-                    used_neighbors.add(neighbor)
+    folium.GeoJson(olhon_hex, color="green").add_to(m)
 
-for i,r in obj_hex.iterrows():# i = id , r = count_object(значению)
-    folium.GeoJson(
-        data=r["geometry"].__geo_interface__,
-        style_function=lambda feature, count=r["object_count"]: {
-            "color": get_color(count),
-            "weight": 1,
-            "fillOpacity": 0.5,
-        },
-        tooltip=f"Objects: {r['object_count']}"
-    ).add_to(m)
-    #print('i = ',i,' r = ',r["object_count"],' g = ',r["geometry"])
+    # Находим соседние полигоны в olhon_hex и окрашиваем их в голубой цвет
+    used_neighbors = set()  # Для исключения дублирования
+    for i, r in obj_hex.iterrows():
+        if r["object_count"] > 0:  # Только для гексов с объектами
+            neighbors = h3.k_ring(r["h3_8"], k=1)  # Находим соседей
+            print("r[h3_8] ", r["h3_8"],"neigbors ", neighbors)
+            used_neighbors.add(r["h3_8"]) #Чтобы не закрашивались полигоны которые уже имеют объекты
+            for neighbor in neighbors:
+                if neighbor != r["h3_8"] and neighbor in olhon_hex.index:  # Сосед из olhon_hex
+                    if neighbor not in used_neighbors:
+                        neighbor_geom = Polygon(h3.h3_to_geo_boundary(neighbor, geo_json=True))
+                        folium.GeoJson(
+                            data=neighbor_geom.__geo_interface__,
+                            style_function=lambda feature: {
+                                "color": "blue",  # Голубой цвет для соседей
+                                "weight": 1,
+                                "fillOpacity": 0.3,
+                            },
+                        ).add_to(m)
+                        used_neighbors.add(neighbor)
 
-# Вывод маркеров мест на карту
-for index, rows in df_olkhon.iterrows():
-    folium.Marker(
-        location=[rows["lat"], rows["lng"]],
-        tooltip="Click me!",
-        popup=rows["name"],
-        icon=folium.Icon(icon="place_icon.png"),
-    ).add_to(m)
+    for i,r in obj_hex.iterrows():# i = id , r = count_object(значению)
+        folium.GeoJson(
+            data=r["geometry"].__geo_interface__,
+            style_function=lambda feature, count=r["object_count"]: {
+                "color": get_color(count),
+                "weight": 1,
+                "fillOpacity": 0.5,
+            },
+            tooltip=f"Objects: {r['object_count']}"
+        ).add_to(m)
+        #print('i = ',i,' r = ',r["object_count"],' g = ',r["geometry"])
 
-# Сохраняем карту
-m.save("map.html")
-webbrowser.open("map.html")
+    # Вывод маркеров мест на карту
+    for index, rows in df_olkhon.iterrows():
+        folium.Marker(
+            location=[rows["lat"], rows["lng"]],
+            tooltip="Click me!",
+            popup=rows["name"],
+            icon=folium.Icon(icon="place_icon.png"),
+        ).add_to(m)
+
+    # Сохраняем карту
+    m.save("map.html")
+    webbrowser.open("map.html")
+
+if __name__== '__main__':
+  main()
