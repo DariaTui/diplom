@@ -4,16 +4,29 @@ import webbrowser
 import geopandas as gpd
 import pandas as pd
 import h3pandas
-from connect_bd import df_lat, df_lon, name_obj
+#передача переменных из файла с выборкой данных из бд
+from connect_bd import df_lat, df_lon, name_obj, type_obj
 import h3
 from shapely.geometry import Polygon
-#changes
+
+#тип который пользователь выберет как сферу бизнеса
+type_business = 'natural'
+
 # Ольхон и его границы
 place = "остров Ольхон"
 gdf = ox.geocode_to_gdf(place, which_result=1) 
 olhon_hex = gdf.h3.polyfill_resample(8)
 # создается dataFrame с переданными данными 
 df_olkhon = pd.DataFrame({"lat": df_lat, "lng": df_lon, "name":name_obj})
+
+# создается dataFrame с типами и выборка значений по выбранному типу бизнеса
+def filter_type(type_obj, type_business):
+    df_type = pd.DataFrame({"type":type_obj}) 
+    filtered_df = df_type[df_type['type'].apply(lambda x: type_business in x if isinstance(x, list) else x == type_business)]
+    indexes = filtered_df.index #получение индексов заданных типов
+   # print(df_olkhon.loc[indexes]) #поиск мест размещение с соответсвующим типу индексом 
+
+
 # создается столбец h3_8
 df_olkhon["h3_8"] = df_olkhon.apply(lambda row: h3.geo_to_h3(row["lat"], row["lng"], 8), axis=1)
 # создается столбец object_count в котором подсчитывается кол-во объектов на полигон
@@ -90,6 +103,9 @@ def main():
     # Сохраняем карту
     m.save("map.html")
     webbrowser.open("map.html")
+    
+#IMPORTANT
+# if __name__== '__main__':
+#   main()
 
-if __name__== '__main__':
-  main()
+#выборка прецедентов по типу
