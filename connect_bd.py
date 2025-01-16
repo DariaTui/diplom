@@ -2,9 +2,30 @@ import pymysql
 import pandas as pd
 import h3
 
-tables = ["sights_olkhon"]
+tables = ["sights_olkhon","catering_olkhon"]
 req_unique_type = "select distinct type from {};".format(tables[0])
 type_selection = ""
+
+#перевод слов из бд
+keywords_sights = {
+    "музей": "museums",
+    "смотровая площадка": "observation_deck",
+    "сапсёрфинг": "sapsurfing"
+}
+
+keywords_caterings = {
+    "Кафе": "cafe",
+    "Ресторан": "restaurant",
+    "Кофейня": "coffee_house",
+    "Доставка еды и обедов": "delivery",
+    "Пиццерия": "pizzeria",
+    "Бар": "bar",
+    "Паб": "pub",
+    "Кальян-бар": "bar",
+    "Мороженое": "ice-cream",
+    "Турбаза": "hotel",
+    "Гостиница": "hotel",
+}
 
 #выборка уникальных типов из бд
 def separation_of_types(tables,req_unique_type):
@@ -17,22 +38,34 @@ def separation_of_types(tables,req_unique_type):
     return types_obj
 
 # редактирование типов мест из бд
-def splitting_types(df):
+def splitting_types(df,keywords):
     type_obj = df["type"].values.tolist()
     for id_i, i in enumerate(type_obj):  # Используем enumerate для получения индекса
         if "," in i:
             type_obj[id_i] = i.split(sep=",")  # Изменяем элемент списка по индексу
-        # изменение названий на англ
-        if "музей" in i.lower():
-            type_obj[id_i] = "museums"
-        if "смотровая площадка" in i.lower():
-            type_obj[id_i] = "observation_deck"
-        if "сапсёрфинг" in i.lower():
-            type_obj[id_i] = "sapsurfing"
+        # изменение названий на англ для достопримечательностей
+        for key, value in keywords.items():
+            if key in i.lower():
+                type_obj[id_i] = value
+                break
             
     return type_obj
 
-def connect_with_bd(): 
+#функция по выбору общепитов из бд
+def select_caterings():
+
+    query="SELECT * FROM catering_olkhon"
+    pd_cat_data = pd.read_sql(query,connection)
+    df_cat = pd_cat_data[['name','latitude','longitude','type']]
+
+    df_cat_lat = df_cat["latitude"].values.tolist()
+    df_cat_lon = df_cat["longitude"].values.tolist()
+    name_cat_obj = df_cat["name"].values.tolist()
+    type_cat_obj = splitting_types(df_cat,keywords_caterings)
+    return df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj
+
+#функция по выбору достопримечательностей из бд
+def select_sights(): 
 
     query="SELECT name,latitude,longitude, type FROM sights_olkhon"
     pd_data = pd.read_sql(query,connection)
@@ -42,8 +75,10 @@ def connect_with_bd():
     df_lon = df["longitude"].values.tolist()
     name_obj = df["name"].values.tolist()
     #type_obj = df["type"].values.tolist()
-    type_obj = splitting_types(df)
+    type_obj = splitting_types(df, keywords_sights)
     return df_lat, df_lon, name_obj, type_obj
+
+
 
 connection = pymysql.connect(
             host="localhost",
@@ -51,5 +86,8 @@ connection = pymysql.connect(
             passwd="122002",
             database="tourism"
         )
-df_lat, df_lon, name_obj, type_obj = connect_with_bd()
-#print(df_lat, df_lon, name_obj, type_obj)
+# df_lat, df_lon, name_obj, type_obj = select_sights()
+# print(type_obj)
+
+df_lat, df_lon, name_obj, type_obj = select_caterings()
+print(df_lat, df_lon, name_obj, type_obj)

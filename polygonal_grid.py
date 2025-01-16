@@ -89,8 +89,11 @@ def main():
             },
             tooltip=f"Objects: {r['object_count']}"
         ).add_to(m)
+            # Сохраняем карту
+    m.save("map.html")
+    webbrowser.open("map.html")
         #print('i = ',i,' r = ',r["object_count"],' g = ',r["geometry"])
-
+def markers_obj(map):
     # Вывод маркеров мест на карту
     for index, rows in df_olkhon.iterrows():
         folium.Marker(
@@ -98,14 +101,11 @@ def main():
             tooltip="Click me!",
             popup=rows["name"],
             icon=folium.Icon(icon="place_icon.png"),
-        ).add_to(m)
+        ).add_to(map)
+    return map
 
-    # Сохраняем карту
-    m.save("map.html")
-    webbrowser.open("map.html")
-    
 #IMPORTANT
-# if __name__== '__main__':
-#   main()
+if __name__== '__main__':
+  main()
 
 #выборка прецедентов по типу
