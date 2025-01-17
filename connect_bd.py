@@ -86,8 +86,8 @@ connection = pymysql.connect(
             passwd="122002",
             database="tourism"
         )
-# df_lat, df_lon, name_obj, type_obj = select_sights()
+df_lat, df_lon, name_obj, type_obj = select_sights()
 # print(type_obj)
 
-df_lat, df_lon, name_obj, type_obj = select_caterings()
-print(df_lat, df_lon, name_obj, type_obj)
+df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj = select_caterings()
+#print(df__cat_lat, df_cat_lon, name_cat_obj, type_cat_obj)
