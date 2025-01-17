@@ -38,7 +38,7 @@ def get_restricted_areas():
     # Определяем bounding box для области поиска (широта и долгота)
     location = "Olkhon, Russia"  # Измените на нужный город
     #tags = {'aeroway': ['aerodrome', 'helipad']}  # Фильтруем аэропорты и вертолетные площадки
-    tags = {'amenity': ['school', 'hospital',"bar", 'shop']}
+    tags = {'amenity': ['school', 'hospital']}
     gdf = ox.geometries_from_place(location, tags)
     return gdf
 
