@@ -21,7 +21,7 @@ gdf = ox.geocode_to_gdf(place, which_result=1)
 m = folium.Map([gdf.centroid.y, gdf.centroid.x])
 
 olhon_hex = gdf.h3.polyfill_resample(8)
-# создается dataFrame с переданными данными 
+# создается dataFrame с переданными данными объектов инфраструктуры
 df_olkhon = pd.DataFrame({"lat": df_lat, "lng": df_lon, "name":name_obj})
 # создается dataFrame с переданными данными caterings
 df_cat_olkhon = pd.DataFrame({"lat": df_cat_lat, "lng": df_cat_lon, "name":name_cat_obj})
@@ -98,6 +98,8 @@ def main(df):
     m.save("map.html")
     webbrowser.open("map.html")
         #print('i = ',i,' r = ',r["object_count"],' g = ',r["geometry"])
+
+
 def markers_obj(map,df):
     # Вывод маркеров мест на карту
     for index, rows in df.iterrows():
@@ -111,7 +113,7 @@ def markers_obj(map,df):
 
 #IMPORTANT
 if __name__== '__main__':
-  markers_obj(m,df_cat_olkhon)
+  markers_obj(m,df_olkhon)
   main(df_cat_olkhon)
   
 
