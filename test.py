@@ -1,46 +1,45 @@
-import osmnx as ox
-import folium
-import networkx as nx
-import webbrowser
-from polygonal_grid import df_olkhon, place, m 
+import rasterio
+from rasterio.plot import show
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 
-ox.config(log_console=True, use_cache=True)
-# define the start and end locations in latlng
-start_latlng = (df_olkhon["lat"][0],df_olkhon["lng"][0])
-end_latlng = (df_olkhon["lat"][1],df_olkhon["lng"][1])
+# Путь к вашему файлу .tif
+tif_file = 'path_to_your_file.tif'
 
-# кратчайший маршрут в зависимости от способа передвижения
-mode = "walk" # 'drive', 'bike', 'walk'
+# Ольхон и его границы
+place = "остров Ольхон"
+gdf = ox.geocode_to_gdf(place, which_result=1) 
+# Создаем карту
+m = folium.Map([gdf.centroid.y, gdf.centroid.x])
 
-# найти кратчайший путь в зависимости от расстояния или времени
-optimizer = 'length' # 'length','time'
+# Открываем файл с помощью rasterio
+with rasterio.open(tif_file) as src:
+    # Читаем данные
+    data = src.read(1)  # Читаем первый канал (если изображение многоканальное, можно выбрать другой)
+    
+    # Получаем метаданные, включая координаты
+    transform = src.transform
+    extent = [transform[2], transform[2] + transform[0] * src.width,
+              transform[5] + transform[4] * src.height, transform[5]]
 
-# создать график из OSM в границах некоторого геокодируемого места
-graph = ox.graph_from_place(place, network_type = mode)
-
-# найти ближайший узел к начальной локации
-orig_node = ox.nearest_nodes(graph, df_olkhon["lat"][0],df_olkhon["lng"][0])
-
-# найти ближайший узел к конечной локации
-dest_node  = ox.nearest_nodes(graph, df_olkhon["lat"][1],df_olkhon["lng"][1])
-
-#нахождение крайчайшего расстояния
-shortest_route = nx.shortest_path(graph, orig_node, dest_node, weight=optimizer)
-
-#shortest_route_map=ox.graph_to_gdfs(graph,shortest_route)
-#--Задачи--
-#найти способ перевести данные shortest_route_map в geoJson
-#почему при преобразовании список пуст ?
-route_edges = list(zip(shortest_route[:-1], shortest_route[1:]))
-nodes, edges = ox.graph_to_gdfs(graph)
-edges_route = edges.loc[edges.index.isin(list(zip(shortest_route[:-1], shortest_route[1:])))]
-
-print(edges_route)
-# Добавление маршрута
-folium.GeoJson(edges_route).add_to(m)
-
-#folium.GeoJson(shortest_route_map).add_to(m)
-
-m.save("test_map.html")
-webbrowser.open("test_map.html")
-
+    # Создаем карту с использованием cartopy
+    fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()})
+    
+    # Добавляем географические элементы на карту
+    ax.add_feature(cfeature.COASTLINE)
+    ax.add_feature(cfeature.BORDERS, linestyle=':')
+    ax.add_feature(cfeature.LAND, edgecolor='black')
+    ax.add_feature(cfeature.OCEAN)
+    
+    # Отображаем изображение на карте
+    img = ax.imshow(data, extent=extent, transform=ccrs.PlateCarree(), cmap='viridis')
+    
+    # Добавляем цветовую шкалу
+    plt.colorbar(img, ax=ax, orientation='vertical', label='Значение пикселя')
+    
+    # Заголовок карты
+    plt.title('Изображение на карте')
+    
+    # Показать карту
+    plt.show()
