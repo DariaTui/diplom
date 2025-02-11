@@ -56,27 +56,29 @@ def select_caterings():
 
     query="SELECT * FROM catering_olkhon"
     pd_cat_data = pd.read_sql(query,connection)
-    df_cat = pd_cat_data[['name','latitude','longitude','type']]
+    df_cat = pd_cat_data[['id','name','latitude','longitude','type']]
 
+    df_cat_id = df_cat["id"].values.tolist()
     df_cat_lat = df_cat["latitude"].values.tolist()
     df_cat_lon = df_cat["longitude"].values.tolist()
     name_cat_obj = df_cat["name"].values.tolist()
     type_cat_obj = splitting_types(df_cat,keywords_caterings)
-    return df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj
+    return df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj
 
 #функция по выбору достопримечательностей из бд
 def select_sights(): 
 
-    query="SELECT name,latitude,longitude, type FROM sights_olkhon"
+    query="SELECT * FROM sights_olkhon"
     pd_data = pd.read_sql(query,connection)
-    df = pd_data[['name','latitude','longitude','type']]
+    df = pd_data[["id",'name','latitude','longitude','type']]
 
+    df_id = df["id"].values.tolist()
     df_lat = df["latitude"].values.tolist()
     df_lon = df["longitude"].values.tolist()
     name_obj = df["name"].values.tolist()
     #type_obj = df["type"].values.tolist()
     type_obj = splitting_types(df, keywords_sights)
-    return df_lat, df_lon, name_obj, type_obj
+    return df_id, df_lat, df_lon, name_obj, type_obj
 
 
 
@@ -86,8 +88,8 @@ connection = pymysql.connect(
             passwd="122002",
             database="tourism"
         )
-df_lat, df_lon, name_obj, type_obj = select_sights()
-# print(type_obj)
+df_id, df_lat, df_lon, name_obj, type_obj = select_sights()
+print(df_id, df_lat, df_lon, name_obj, type_obj)
 
-df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj = select_caterings()
-#print(df__cat_lat, df_cat_lon, name_cat_obj, type_cat_obj)
+df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj = select_caterings()
+#print(df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj)

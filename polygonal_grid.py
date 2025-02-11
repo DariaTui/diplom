@@ -5,14 +5,14 @@ import geopandas as gpd
 import pandas as pd
 import h3pandas
 #передача переменных из файла с выборкой данных из бд
-from connect_bd import df_lat, df_lon, name_obj, type_obj
-from connect_bd import df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj
+from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
+from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj
 
 import h3
 from shapely.geometry import Polygon
 
 #тип который пользователь выберет как сферу бизнеса
-type_business = 'natural'
+type_business = 'Кофейня'
 
 # Ольхон и его границы
 place = "остров Ольхон"
@@ -22,16 +22,11 @@ m = folium.Map([gdf.centroid.y, gdf.centroid.x])
 
 olhon_hex = gdf.h3.polyfill_resample(8)
 # создается dataFrame с переданными данными объектов инфраструктуры
-df_olkhon = pd.DataFrame({"lat": df_lat, "lng": df_lon, "name":name_obj})
+df_olkhon = pd.DataFrame({"id":df_id,"lat": df_lat, "lng": df_lon, "name":name_obj})
 # создается dataFrame с переданными данными caterings
-df_cat_olkhon = pd.DataFrame({"lat": df_cat_lat, "lng": df_cat_lon, "name":name_cat_obj})
+df_cat_olkhon = pd.DataFrame({"id":df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name":name_cat_obj})
 
-# создается dataFrame с типами и выборка значений по выбранному типу бизнеса
-def filter_type(type_obj, type_business):
-    df_type = pd.DataFrame({"type":type_obj}) 
-    filtered_df = df_type[df_type['type'].apply(lambda x: type_business in x if isinstance(x, list) else x == type_business)]
-    indexes = filtered_df.index #получение индексов заданных типов
-   # print(df_olkhon.loc[indexes]) #поиск мест размещение с соответсвующим типу индексом 
+
 
 def create_geometry(df):
     # создается столбец h3_8
@@ -112,9 +107,17 @@ def markers_obj(map,df):
     return map
 
 #IMPORTANT
-if __name__== '__main__':
-  markers_obj(m,df_olkhon)
-  main(df_cat_olkhon)
+# if __name__== '__main__':
+#   markers_obj(m,df_cat_olkhon)
+#   main(df_cat_olkhon)
+#   webbrowser.open("map.html")
   
-
-#выборка прецедентов по типу
+# создается dataFrame с типами и выборка значений по выбранному типу бизнеса
+def filter_type(df, type_obj, type_business):
+    df_type = pd.DataFrame({"type":type_obj}) 
+    filtered_df = df_type[df_type['type'].apply(lambda x: type_business in x if isinstance(x, list) else x == type_business)]
+    indexes = filtered_df.index #получение индексов заданных типов
+    filter_df = df.loc[indexes] #поиск мест размещение с соответсвующим типу индексом
+    main(filter_df)
+    return filter_df
+print(filter_type(df_cat_olkhon,type_cat_obj, type_business))
