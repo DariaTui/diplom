@@ -1,45 +1,38 @@
-import rasterio
-from rasterio.plot import show
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
+import geopandas as gpd
+import osmnx as ox
+import folium
+import webbrowser
 
-# Путь к вашему файлу .tif
-tif_file = 'path_to_your_file.tif'
+# Загрузка слоя
+gdfVec = gpd.read_file("datas/qgis/zone_landshaft_Olkhon.geojson")
+gdfVec = gdfVec.to_crs(epsg=4326)
+# Вывод первых строк для проверки
+print(gdfVec.head())
 
-# Ольхон и его границы
+# Получаем координаты острова Ольхон через OSMnx
 place = "остров Ольхон"
-gdf = ox.geocode_to_gdf(place, which_result=1) 
-# Создаем карту
-m = folium.Map([gdf.centroid.y, gdf.centroid.x])
+gdf = ox.geocode_to_gdf(place, which_result=1)
 
-# Открываем файл с помощью rasterio
-with rasterio.open(tif_file) as src:
-    # Читаем данные
-    data = src.read(1)  # Читаем первый канал (если изображение многоканальное, можно выбрать другой)
-    
-    # Получаем метаданные, включая координаты
-    transform = src.transform
-    extent = [transform[2], transform[2] + transform[0] * src.width,
-              transform[5] + transform[4] * src.height, transform[5]]
+# Центр карты (берем первую точку)
+m = folium.Map([gdf.centroid.y, gdf.centroid.x], zoom_start=10)
 
-    # Создаем карту с использованием cartopy
-    fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()})
-    
-    # Добавляем географические элементы на карту
-    ax.add_feature(cfeature.COASTLINE)
-    ax.add_feature(cfeature.BORDERS, linestyle=':')
-    ax.add_feature(cfeature.LAND, edgecolor='black')
-    ax.add_feature(cfeature.OCEAN)
-    
-    # Отображаем изображение на карте
-    img = ax.imshow(data, extent=extent, transform=ccrs.PlateCarree(), cmap='viridis')
-    
-    # Добавляем цветовую шкалу
-    plt.colorbar(img, ax=ax, orientation='vertical', label='Значение пикселя')
-    
-    # Заголовок карты
-    plt.title('Изображение на карте')
-    
-    # Показать карту
-    plt.show()
+# Определение цветов
+color_map = {1: "red", 2: "yellow", 3: "green"}
+
+# Добавление полигонов
+for _, row in gdfVec.iterrows():
+    color = color_map.get(row["degree"], "gray")  # Серый цвет по умолчанию
+
+    folium.GeoJson(
+        row["geometry"].__geo_interface__,  # Преобразуем в формат GeoJSON
+        style_function=lambda feature, color=color: {
+            "fillColor": color,
+            "color": "black",
+            "weight": 1,
+            "fillOpacity": 0.5
+        }
+    ).add_to(m)
+
+# Сохранение и открытие карты
+m.save("mapVector.html")
+webbrowser.open("mapVector.html")

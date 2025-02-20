@@ -56,14 +56,16 @@ def select_caterings():
 
     query="SELECT * FROM catering_olkhon"
     pd_cat_data = pd.read_sql(query,connection)
-    df_cat = pd_cat_data[['id','name','latitude','longitude','type']]
+    df_cat = pd_cat_data[['id','name','latitude','longitude','type','pros','cons']]
 
     df_cat_id = df_cat["id"].values.tolist()
     df_cat_lat = df_cat["latitude"].values.tolist()
     df_cat_lon = df_cat["longitude"].values.tolist()
     name_cat_obj = df_cat["name"].values.tolist()
+    df_cat_pros = df_cat["pros"].values.tolist()
+    df_cat_cons = df_cat["cons"].values.tolist()
     type_cat_obj = splitting_types(df_cat,keywords_caterings)
-    return df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj
+    return df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
 
 #функция по выбору достопримечательностей из бд
 def select_sights(): 
@@ -91,5 +93,5 @@ connection = pymysql.connect(
 df_id, df_lat, df_lon, name_obj, type_obj = select_sights()
 print(df_id, df_lat, df_lon, name_obj, type_obj)
 
-df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj = select_caterings()
+df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons = select_caterings()
 #print(df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj)

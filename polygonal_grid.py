@@ -6,13 +6,13 @@ import pandas as pd
 import h3pandas
 #передача переменных из файла с выборкой данных из бд
 from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
-from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj
+from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
 
 import h3
 from shapely.geometry import Polygon
 
 #тип который пользователь выберет как сферу бизнеса
-type_business = 'Кофейня'
+type_business = ''
 
 # Ольхон и его границы
 place = "остров Ольхон"
@@ -24,7 +24,7 @@ olhon_hex = gdf.h3.polyfill_resample(8)
 # создается dataFrame с переданными данными объектов инфраструктуры
 df_olkhon = pd.DataFrame({"id":df_id,"lat": df_lat, "lng": df_lon, "name":name_obj})
 # создается dataFrame с переданными данными caterings
-df_cat_olkhon = pd.DataFrame({"id":df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name":name_cat_obj})
+df_cat_olkhon = pd.DataFrame({"id":df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name":name_cat_obj, "pros":df_cat_pros, "cons":df_cat_cons})
 
 
 
@@ -65,19 +65,7 @@ def main(df):
             neighbors = h3.k_ring(r["h3_8"], k=1)  # Находим соседей
             print("r[h3_8] ", r["h3_8"],"neigbors ", neighbors)
             used_neighbors.add(r["h3_8"]) #Чтобы не закрашивались полигоны которые уже имеют объекты
-            for neighbor in neighbors:
-                if neighbor != r["h3_8"] and neighbor in olhon_hex.index:  # Сосед из olhon_hex
-                    if neighbor not in used_neighbors:
-                        neighbor_geom = Polygon(h3.h3_to_geo_boundary(neighbor, geo_json=True))
-                        folium.GeoJson(
-                            data=neighbor_geom.__geo_interface__,
-                            style_function=lambda feature: {
-                                "color": "blue",  # Голубой цвет для соседей
-                                "weight": 1,
-                                "fillOpacity": 0.3,
-                            },
-                        ).add_to(m)
-                        used_neighbors.add(neighbor)
+            
 
     for i,r in obj_hex.iterrows():# i = id , r = count_object(значению)
         folium.GeoJson(
@@ -98,13 +86,21 @@ def main(df):
 def markers_obj(map,df):
     # Вывод маркеров мест на карту
     for index, rows in df.iterrows():
+        popup_text = f"""
+        <b>{rows["name"]}</b><br>
+        <b>Плюсы:</b> {rows["pros"] if pd.notna(rows["pros"]) else "Нет данных"}<br>
+        <b>Минусы:</b> {rows["cons"] if pd.notna(rows["cons"]) else "Нет данных"}
+        """
         folium.Marker(
             location=[rows["lat"], rows["lng"]],
             tooltip="Click me!",
-            popup=rows["name"],
+            popup=folium.Popup(popup_text, max_width=300),
             icon=folium.Icon(icon="place_icon.png"),
         ).add_to(map)
-    return map
+
+        map.save("map.html")
+        #webbrowser.open("map.html")
+    return webbrowser.open("map.html")
 
 #IMPORTANT
 # if __name__== '__main__':
@@ -113,11 +109,20 @@ def markers_obj(map,df):
 #   webbrowser.open("map.html")
   
 # создается dataFrame с типами и выборка значений по выбранному типу бизнеса
-def filter_type(df, type_obj, type_business):
-    df_type = pd.DataFrame({"type":type_obj}) 
-    filtered_df = df_type[df_type['type'].apply(lambda x: type_business in x if isinstance(x, list) else x == type_business)]
-    indexes = filtered_df.index #получение индексов заданных типов
-    filter_df = df.loc[indexes] #поиск мест размещение с соответсвующим типу индексом
-    main(filter_df)
-    return filter_df
-print(filter_type(df_cat_olkhon,type_cat_obj, type_business))
+def filter_type(df, type_obj, type_business,m):
+    if type_business!='':
+        df_type = pd.DataFrame({"type":type_obj}) 
+        filtered_df = df_type[df_type['type'].apply(lambda x: type_business in x if isinstance(x, list) else x == type_business)]
+        indexes = filtered_df.index #получение индексов заданных типов
+        filter_df = df.loc[indexes] #поиск мест размещение с соответсвующим типу индексом
+        
+        main(filter_df)
+        markers_obj(m, filter_df)
+        
+    else:        
+        main(df)
+        markers_obj(m, df)
+    
+    
+print(filter_type(df_cat_olkhon,type_cat_obj, type_business,m))
+
