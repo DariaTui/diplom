@@ -13,7 +13,21 @@ import string
 import pandas as pd
 from connect_bd import connection
 
-query_select_text = "select id, text from reviews_caterings"
+
+
+TABLES = {
+    "catering": {"catering_olkhon"},
+    "placement": {"placement_location_olkhon"},
+    "catering_r": {"reviews_caterings"},
+    "placement_r": {"reviews_pl_olkhon"}
+}
+id = {
+    "catering": {"id_cat"},
+    "placement": {"id_place"}
+}
+query_select_text_cat = "select id, text from reviews_caterings"
+
+query_select_text_pl = "select id, text from reviews_pl_olkhon"
 connection = connection
 # Инициализация модуля pymorphy2
 morph = pymorphy2.MorphAnalyzer()
@@ -89,24 +103,11 @@ def review_processin(review, negative_words,positive_words):
                     cons.append(phrase)
         
         i += 1  # Переход к следующему слову
-    return pros, cons
-
-
-
-#функция для заполнение cons pros
-def add_cons_pros(query_select_text, connection):
-    pd_read_sql = pd.read_sql(query_select_text, connection)
-    list_reviews = pd_read_sql.values.tolist()
-    for i in list_reviews:
-        cons_pros = review_processin(i[1], negative_words,positive_words)
-        print(cons_pros)
-        
+    return pros, cons   
     
-#add_cons_pros(query_select_text, connection)    
-
 import pymysql
 #функция преобразует в списки и добавляет плюсы и минусы в бд
-def add_cons_pros(query_select_text, connection):
+def add_cons_pros(query_select_text, connection,table_review):
     pd_read_sql = pd.read_sql(query_select_text, connection)
     list_reviews = pd_read_sql.values.tolist()
 
@@ -123,11 +124,7 @@ def add_cons_pros(query_select_text, connection):
         update_data.append((pros_text, cons_text, review_id))
 
     # Обновляем БД
-    update_query = """
-        UPDATE reviews_caterings 
-        SET pros = %s, cons = %s 
-        WHERE id = %s
-    """
+    update_query = "UPDATE {0} SET pros = %s, cons = %s WHERE id = %s".format(table_review)
 
     try:
         with connection.cursor() as cursor:
@@ -137,10 +134,6 @@ def add_cons_pros(query_select_text, connection):
     except pymysql.MySQLError as e:
         print(f"Ошибка при обновлении: {e}")
         connection.rollback()
-
-# Запускаем обновление
-#add_cons_pros(query_select_text, connection)
-
 
 #Занесение частовстречаемых pros cons из таблицы reviews_caterings в catering_olkhon.
 import pymysql
@@ -153,7 +146,6 @@ def get_top_phrases(text_list, top_n=3, min_count=2):
     """
     phrases = [phrase.strip() for text in text_list if text for phrase in text.split(", ")]
     counter = Counter(phrases)
-    #print("phrases ",len(phrases),"counter ",counter)
     # Выбираем только те фразы, которые встречаются минимум min_count раз
     frequent_phrases = [phrase for phrase, count in counter.most_common() if count >= min_count]
 
@@ -164,24 +156,21 @@ def get_top_phrases(text_list, top_n=3, min_count=2):
 
     return ", ".join(set(frequent_phrases[:top_n])) if frequent_phrases else None
 
-def update_catering_pros_cons(connection):
+def update_pros_cons(connection, table, table_r, id):
     """
     Выбирает часто встречающиеся pros и cons из reviews_caterings и обновляет catering_olkhon
     """
     try:
         with connection.cursor() as cursor:
             # Получаем все отзывы, сгруппированные по id_cat
-            query = """
-                SELECT id_cat, pros, cons FROM reviews_caterings WHERE id_cat IS NOT NULL
-            """
+            query = "SELECT {0}, pros, cons FROM {1} WHERE {0} IS NOT NULL".format(id,table_r)
             df = pd.read_sql(query, connection)
 
             # Группируем данные по id_cat
-            grouped = df.groupby("id_cat").agg(list)
-            print(grouped)
+            grouped = df.groupby(id).agg(list)
             update_data = []  # Список для batch update
 
-            for id_cat, row in grouped.iterrows():
+            for id, row in grouped.iterrows():
                 common_pros = get_top_phrases(row["pros"])
                 common_cons = get_top_phrases(row["cons"])
                 print(common_cons)
@@ -190,26 +179,25 @@ def update_catering_pros_cons(connection):
                 if common_pros or common_cons:
                     update_data.append((common_pros if common_pros else None, 
                                         common_cons if common_cons else None, 
-                                        id_cat))
+                                        id))
 
             # SQL-запрос на обновление catering_olkhon
-            update_query = """
-                UPDATE catering_olkhon 
-                SET pros = %s, cons = %s 
-                WHERE id_cat = %s
-            """
+            update_query = "UPDATE {0} SET pros = %s, cons = %s WHERE {1} = %s".format(table, id)
 
             # Выполняем batch update
             if update_data:
                 cursor.executemany(update_query, update_data)
                 connection.commit()
-                print("Данные успешно обновлены в catering_olkhon!")
+                print("Данные успешно обновлены в {0}!".format(table))
             else:
                 print("Нет данных для обновления.")
 
-    except pymysql.MySQLError as e:
-        print(f"Ошибка при обновлении: {e}")
+    except pymysql.MySQLError as table:
+        print(f"Ошибка при обновлении: {table}")
         connection.rollback()
 
+
+# Запускаем обновление
+add_cons_pros(query_select_text_pl, connection, list(TABLES["placement_r"])[0])
 # Запуск обновления
-update_catering_pros_cons(connection)
+update_pros_cons(connection, list(TABLES["placement"])[0], list(TABLES["placement_r"])[0], list(id["placement"])[0])
