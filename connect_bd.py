@@ -67,6 +67,22 @@ def select_caterings():
     type_cat_obj = splitting_types(df_cat,keywords_caterings)
     return df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
 
+#функция по выбору общепитов из бд
+def select_pl():
+
+    query="SELECT * FROM placement_location_olkhon"
+    pd_pl_data = pd.read_sql(query,connection)
+    df_pl = pd_pl_data[['id','name','lat','lon','pros','cons']]
+
+    df_pl_id = df_pl["id"].values.tolist()
+    df_pl_lat = df_pl["lat"].values.tolist()
+    df_pl_lon = df_pl["lon"].values.tolist()
+    name_pl_obj = df_pl["name"].values.tolist()
+    df_pl_pros = df_pl["pros"].values.tolist()
+    df_pl_cons = df_pl["cons"].values.tolist()
+
+    return df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons
+
 #функция по выбору достопримечательностей из бд
 def select_sights(): 
 
@@ -90,8 +106,11 @@ connection = pymysql.connect(
             passwd="122002",
             database="tourism"
         )
+
 df_id, df_lat, df_lon, name_obj, type_obj = select_sights()
-print(df_id, df_lat, df_lon, name_obj, type_obj)
 
 df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons = select_caterings()
+
+df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons = select_pl()
 #print(df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj)
+print(df_pl_id)

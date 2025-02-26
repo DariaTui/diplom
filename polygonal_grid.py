@@ -4,9 +4,12 @@ import webbrowser
 import geopandas as gpd
 import pandas as pd
 import h3pandas
+from shapely.geometry import Point
+from analyze_data import normalize_data
 #передача переменных из файла с выборкой данных из бд
 from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
 from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
+from connect_bd import df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons
 
 import h3
 from shapely.geometry import Polygon
@@ -26,7 +29,14 @@ df_olkhon = pd.DataFrame({"id":df_id,"lat": df_lat, "lng": df_lon, "name":name_o
 # создается dataFrame с переданными данными caterings
 df_cat_olkhon = pd.DataFrame({"id":df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name":name_cat_obj, "pros":df_cat_pros, "cons":df_cat_cons})
 
+df_pl_olkhon = pd.DataFrame({"id":df_pl_id, "lat": df_pl_lat, "lng": df_pl_lon, "name":name_pl_obj, "pros":df_pl_pros, "cons":df_pl_cons})
 
+# Фильтрация объектов, чтобы оставить только те, что находятся внутри границ Ольхона
+def filter_points_within_island(df, gdf):
+    island_polygon = gdf.geometry.iloc[0]  # Полигон острова Ольхон
+    df["geometry"] = df.apply(lambda row: Point(row["lng"], row["lat"]), axis=1)  # Создание геометрии
+    df_filtered = df[df["geometry"].apply(lambda point: point.within(island_polygon))]  # Фильтрация
+    return df_filtered.drop(columns=["geometry"])  # Удаляем колонку с геометрией
 
 def create_geometry(df):
     # создается столбец h3_8
@@ -46,58 +56,72 @@ def create_geometry(df):
     return obj_hex
 
 # Функция для выбора цвета в зависимости от количества объектов
-def get_color(count):
-    if count > 1:
-        return "red"  # Более яркий цвет для полигонов с > 1 объектами
-    elif count == 1:
-        return "yellow"  # Нейтральный цвет для 1 объекта
+def get_color(z_score):
+    if z_score > 1.5:
+        return "red"  # Высокая концентрация объектов
+    elif z_score > 0.5:
+        return "orange"  # Средняя концентрация
+    elif z_score > -0.5:
+        return "yellow"  # Небольшая концентрация
     else:
-        return "green"  # Стандартный цвет, если объектов нет
+        return "green"  # Низкая концентрация
 
-def main(df):
+# 🔹 **Основная функция (обновленный `main()`)**
+def main(df, gdf):
+    
+    df = filter_points_within_island(df, gdf)  # Фильтруем объекты по границам Ольхона
+    obj_hex = create_geometry(df)  # Создаём гексагоны с подсчётом объектов
 
+    # **Добавляем нормализацию данных**
+    obj_hex["z_score"] = normalize_data(obj_hex["object_count"])  # Нормализуем количество объектов
+
+    # **Создание карты**
+    m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=10)
+    #добавляет карту полигонов на весь остров ольхон
     folium.GeoJson(olhon_hex, color="green").add_to(m)
-    obj_hex = create_geometry(df)
-    # Находим соседние полигоны в olhon_hex и окрашиваем их в голубой цвет
-    used_neighbors = set()  # Для исключения дублирования
-    for i, r in obj_hex.iterrows():
-        if r["object_count"] > 0:  # Только для гексов с объектами
-            neighbors = h3.k_ring(r["h3_8"], k=1)  # Находим соседей
-            print("r[h3_8] ", r["h3_8"],"neigbors ", neighbors)
-            used_neighbors.add(r["h3_8"]) #Чтобы не закрашивались полигоны которые уже имеют объекты
-            
-
-    for i,r in obj_hex.iterrows():# i = id , r = count_object(значению)
+    # **Отрисовка гексагонов на карте**
+    for _, row in obj_hex.iterrows():
         folium.GeoJson(
-            data=r["geometry"].__geo_interface__,
-            style_function=lambda feature, count=r["object_count"]: {
-                "color": get_color(count),
+            data=row["geometry"].__geo_interface__,
+            style_function=lambda feature, z=row["z_score"]: {
+                "color": get_color(z),
                 "weight": 1,
                 "fillOpacity": 0.5,
             },
-            tooltip=f"Objects: {r['object_count']}"
+            tooltip=f"Objects: {row['object_count']} (Z: {row['z_score']:.2f})"
         ).add_to(m)
-            # Сохраняем карту
+
+    # **Сохранение и открытие карты**
     m.save("map.html")
     webbrowser.open("map.html")
-        #print('i = ',i,' r = ',r["object_count"],' g = ',r["geometry"])
+
+    return obj_hex 
 
 
 def markers_obj(map,df):
     # Вывод маркеров мест на карту
+    
     for index, rows in df.iterrows():
-        popup_text = f"""
-        <b>{rows["name"]}</b><br>
-        <b>Плюсы:</b> {rows["pros"] if pd.notna(rows["pros"]) else "Нет данных"}<br>
-        <b>Минусы:</b> {rows["cons"] if pd.notna(rows["cons"]) else "Нет данных"}
-        """
-        folium.Marker(
-            location=[rows["lat"], rows["lng"]],
-            tooltip="Click me!",
-            popup=folium.Popup(popup_text, max_width=300),
-            icon=folium.Icon(icon="place_icon.png"),
-        ).add_to(map)
-
+        if df is "df_cat_olkhon": #or df == df_pl_olkhon:
+            popup_text = f"""
+            <b>{rows["name"]}</b><br>
+            <b>Плюсы:</b> {rows["pros"] if pd.notna(rows["pros"]) else "Нет данных"}<br>
+            <b>Минусы:</b> {rows["cons"] if pd.notna(rows["cons"]) else "Нет данных"}
+            """
+            folium.Marker(
+                location=[rows["lat"], rows["lng"]],
+                tooltip="Click me!",
+                popup=folium.Popup(popup_text, max_width=300),
+                icon=folium.Icon(icon="place_icon.png"),
+            ).add_to(map)
+        else:
+            folium.Marker(
+                location=[rows["lat"], rows["lng"]],
+                tooltip="Click me!",
+                popup=folium.Popup(rows["name"], max_width=300),
+                icon=folium.Icon(icon="place_icon.png"),
+            ).add_to(map)
+        
         map.save("map.html")
         #webbrowser.open("map.html")
     return webbrowser.open("map.html")
@@ -109,20 +133,21 @@ def markers_obj(map,df):
 #   webbrowser.open("map.html")
   
 # создается dataFrame с типами и выборка значений по выбранному типу бизнеса
-def filter_type(df, type_obj, type_business,m):
-    if type_business!='':
+def filter_type(df,gdf, type_obj, type_business,m):
+    if type_business!='' and type_obj!='':
         df_type = pd.DataFrame({"type":type_obj}) 
         filtered_df = df_type[df_type['type'].apply(lambda x: type_business in x if isinstance(x, list) else x == type_business)]
         indexes = filtered_df.index #получение индексов заданных типов
         filter_df = df.loc[indexes] #поиск мест размещение с соответсвующим типу индексом
         
-        main(filter_df)
+        main(filter_df,gdf)
         markers_obj(m, filter_df)
         
     else:        
-        main(df)
-        markers_obj(m, df)
+        main(df,gdf)
+        #markers_obj(m, df)
     
     
-print(filter_type(df_cat_olkhon,type_cat_obj, type_business,m))
+#print(filter_type(df_olkhon,type_obj, type_business,m))
+print(filter_type(df_pl_olkhon,gdf,type_obj,type_business,m))
 
