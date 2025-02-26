@@ -12,8 +12,8 @@ import pyproj
 m = folium.Map(location=[53.1036586, 107.3496115], zoom_start=9)
 
 # Путь к вашему файлу geojson
-file_path = "../datas/routes_Baikal.geojson"
-file_path_OOPT = "../datas/OOPT_BPT.geojson"
+file_path = "../datas/qgis/routes_Baikal.geojson"
+file_path_OOPT = "../datas/qgis/OOPT_BPT.geojson"
 #файл для сохранения и вывода карты
 file_name = "map_routes.html"
 
