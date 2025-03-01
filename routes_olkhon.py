@@ -5,18 +5,19 @@ import webbrowser
 import geopandas as gpd
 from shapely.wkt import loads
 from polygonal_grid import df_olkhon, place, m 
+from map_create import create_maps
 
-file_path = "../datas/qgis/routes_Baikal.geojson"
 file_name = "map_routes.html"
 
-gdf_routes = gpd.read_file(file_path)
+def create_routes():
+    file_path = "datas/qgis/routes_Baikal.geojson"
+    gdf_routes = gpd.read_file(file_path)
+    # Добавляем маршруты на карту
+    for _, row in gdf_routes.iterrows():
+        geo_json = folium.GeoJson(row['geometry'], name=f"Route {_}")
+        geo_json.add_to(m)
 
-# Добавляем маршруты на карту
-for _, row in gdf_routes.iterrows():
-    geo_json = folium.GeoJson(row['geometry'], name=f"Route {_}")
-    geo_json.add_to(m)
+    return m
 
 
-
-m.save(file_name)
-webbrowser.open(file_name)
+create_maps(file_name,m)

@@ -13,3 +13,4 @@ def normalize_data(data):
     z_scores = (data - mean) / std_dev
 
     return z_scores  # Возвращаем нормализованные значения
+print(normalize_data(data))

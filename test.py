@@ -2,6 +2,7 @@ import geopandas as gpd
 import osmnx as ox
 import folium
 import webbrowser
+from map_create import create_maps
 
 
 prefer_tourism = {1:"историко-культурного и сакрального туризма",
@@ -68,11 +69,11 @@ def create_zone_map():
             tooltip=zone_name
         ).add_to(m)
 
-    m.save("zone_map.html")
-    webbrowser.open("zone_map.html")
+    map_name = "zone_map.html"
+
 
 # Запуск функции создания карты с зонами
-create_zone_map()
+# create_zone_map()
 
 
 # код создает гексагональную карту и закрашивает полигоны в зависисмости с их местонахождением
@@ -91,6 +92,7 @@ import geopandas as gpd
 import pandas as pd
 import h3pandas
 from shapely.geometry import Point
+import os
 
 # Загрузка зон острова Ольхон
 gdf_zones = gpd.read_file("datas/qgis/zone_landshaft_Olkhon.geojson").to_crs(epsg=4326)
@@ -132,6 +134,6 @@ for _, row in olhon_hex.iterrows():
         tooltip=tooltip_text
     ).add_to(m)
 
-# 🔹 **Сохранение и открытие карты**
-m.save("map/hexagonal_zones.html")
-webbrowser.open("map/hexagonal_zones.html")
+name_map = "hexagonal_zones.html"
+create_maps(name_map,m)
+

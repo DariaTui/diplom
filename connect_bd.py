@@ -112,5 +112,5 @@ df_id, df_lat, df_lon, name_obj, type_obj = select_sights()
 df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons = select_caterings()
 
 df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons = select_pl()
-#print(df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj)
-print(df_pl_id)
+print(df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj)
+#print(df_pl_id)
