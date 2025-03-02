@@ -6,12 +6,16 @@ import pandas as pd
 import h3pandas
 from shapely.geometry import Point
 from analyze_data import normalize_data
-from connect_bd import df_id, df_lat, df_lon, name_obj
+from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
 from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
 from connect_bd import df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj, df_pl_pros, df_pl_cons
 import h3
 from shapely.geometry import Polygon
 from map_create import create_maps
+from shapely.ops import nearest_points
+from shapely.geometry import Point
+
+from pyproj import Transformer
 
 business = 'места размещения'
 size_poligon = 7
@@ -20,6 +24,32 @@ gdf = ox.geocode_to_gdf(place, which_result=1)
 m = folium.Map([gdf.centroid.y, gdf.centroid.x])
 olhon_hex = gdf.h3.polyfill_resample(size_poligon)
 df_landmark_olkhon = pd.DataFrame({"id": df_id, "lat": df_lat, "lng": df_lon, "name": name_obj})
+
+def load_routes():
+    file_path = "datas/qgis/routes_Baikal.geojson"
+    return gpd.read_file(file_path)
+
+def calculate_distance_to_routes(polygon, routes_gdf):
+    nearest_distance = float("inf")
+    for _, route in routes_gdf.iterrows():
+        nearest_point = nearest_points(polygon.centroid, route.geometry)[1]
+        distance = polygon.centroid.distance(nearest_point)
+        if distance < nearest_distance:
+            nearest_distance = distance
+    return nearest_distance
+
+
+transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
+
+def calculate_landmarks_within_radius(polygon, df_landmark, radius):
+    count = 0
+    polygon_centroid = transformer.transform(polygon.centroid.x, polygon.centroid.y)
+    for _, row in df_landmark.iterrows():
+        point = transformer.transform(row["lng"], row["lat"])
+        distance = ((polygon_centroid[0] - point[0])**2 + (polygon_centroid[1] - point[1])**2)**0.5
+        if distance <= radius:
+            count += 1
+    return count
 
 def create_geometry(df, size_poligon):
     df["h3_8"] = df.apply(lambda row: h3.geo_to_h3(row["lat"], row["lng"], size_poligon), axis=1)
@@ -42,18 +72,24 @@ def get_color(z_score):
 def main(df1, df2, gdf):
     obj_hex1 = create_geometry(df1, size_poligon)
     obj_hex2 = create_geometry(df2, size_poligon)
+    routes_gdf = load_routes()
 
     other_business = 'общественное питание' if business == 'места размещения' else 'места размещения'
 
     obj_hex1["other_object_count"] = obj_hex1["h3_8"].map(obj_hex2.set_index("h3_8")["object_count"]).fillna(0)
     obj_hex1["z_score"] = normalize_data(obj_hex1["object_count"])
+    print(obj_hex1["object_count"])
+    obj_hex1["distance_to_route"] = obj_hex1["geometry"].apply(lambda geom: calculate_distance_to_routes(geom, routes_gdf))
+    obj_hex1["landmark_count"] = obj_hex1["geometry"].apply(lambda geom: calculate_landmarks_within_radius(geom, df_landmark_olkhon, 2500))
 
     m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=size_poligon)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
 
     for _, row in obj_hex1.iterrows():
         tooltip_text = (f"{business}: {row['object_count']}\n"
-                        f"{other_business}: {int(row['other_object_count'])} (Z: {row['z_score']:.2f})")
+                        f"{other_business}: {int(row['other_object_count'])} (Z: {row['z_score']:.2f})\n"
+                        f"Расстояние до ближайшего маршрута: {row['distance_to_route']:.2f} м\n"
+                        f"Достопримечательности в радиусе 2.5 км: {row['landmark_count']}")
         folium.GeoJson(
             data=row["geometry"].__geo_interface__,
             style_function=lambda feature, z=row["z_score"]: {
