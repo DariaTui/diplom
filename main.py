@@ -104,14 +104,26 @@ def main(df1, df2, gdf):
         'object_count': obj_hex1['object_count'],
         'other_object_count': obj_hex1['other_object_count'],
         'distance_to_route': obj_hex1['distance_to_route'],
-        'landmark_count': obj_hex1['landmark_count']
+        'landmark_count': obj_hex1['landmark_count'],
+        'degree_favorability':0
     })
 
     # Применяем нормализацию ко всем столбцам
     for column in normalization_data.columns:
         obj_hex1[f"{column}_z_score"] = normalize_data(normalization_data[column].values)
-        if column=='object_count':
-            print(obj_hex1[f"{column}_z_score"],"  ",normalization_data[column].values)
+  
+
+    # Подсчет коэффициента благоприятствования
+    obj_hex1["degree_favorability_z_score"] = (
+            obj_hex1["object_count_z_score"] +
+            obj_hex1["distance_to_route_z_score"] +
+            obj_hex1["landmark_count_z_score"] -
+            obj_hex1["other_object_count_z_score"]
+    )
+
+    # Заполняем в таблице normalization_data
+    normalization_data["degree_favorability"] = obj_hex1["degree_favorability_z_score"]        
+    print("Normalizetable ",normalization_data)
 
     m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=size_poligon)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
@@ -123,7 +135,7 @@ def main(df1, df2, gdf):
                         f"Достопримечательности в радиусе 2.5 км: {row['landmark_count']} (Z: {row['landmark_count_z_score']:.2f})")
         folium.GeoJson(
             data=row["geometry"].__geo_interface__,
-            style_function=lambda feature, z=row["object_count_z_score"]: {
+            style_function=lambda feature, z=row["degree_favorability_z_score"]: {
                 "color": get_color(z),
                 "weight": 1,
                 "fillOpacity": 0.5,
