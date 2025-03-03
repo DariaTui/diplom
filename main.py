@@ -50,16 +50,32 @@ def calculate_landmarks_within_radius(polygon, df_landmark, radius):
             count += 1
     return count
 
-def create_geometry(df, size_poligon):
-    df["h3_8"] = df.apply(lambda row: h3.geo_to_h3(row["lat"], row["lng"], size_poligon), axis=1)
-    df['object_count'] = df.groupby('h3_8')['name'].transform('count')
-    obj_hex = df.h3.geo_to_h3_aggregate(size_poligon)
-    obj_hex = df[["h3_8", "object_count"]].drop_duplicates()
+def create_geometry(df, size_poligon, full_hex):
+    if len(df) > 0:
+        df["h3_8"] = df.apply(lambda row: h3.geo_to_h3(row["lat"], row["lng"], size_poligon), axis=1)
+        df["object_count"] = df.groupby("h3_8")["name"].transform("count")
+        obj_hex = df[["h3_8", "object_count"]].drop_duplicates()
+    else:
+        obj_hex = pd.DataFrame(columns=["h3_8", "object_count"])
+
+    # Собираем ВСЕ ячейки H3
+    all_hex = pd.concat([full_hex, pd.DataFrame({"h3_8": df["h3_8"].unique()})]).drop_duplicates()
+
+    # Объединяем полную сетку с объектами
+    obj_hex = pd.merge(all_hex, obj_hex, on="h3_8", how="left").fillna(0)
+
+    # Преобразуем ячейки в полигоны
     obj_hex["geometry"] = obj_hex["h3_8"].apply(lambda h3_index: Polygon(h3.h3_to_geo_boundary(h3_index, geo_json=True)))
+
     return obj_hex
 
+
+
+
 def get_color(z_score):
-    if z_score > 1.5:
+    if pd.isna(z_score):
+        return "gray"  # Серые полигоны для пустых ячеек
+    elif z_score > 1.5:
         return "red"
     elif z_score > 0.5:
         return "orange"
@@ -68,9 +84,13 @@ def get_color(z_score):
     else:
         return "green"
 
+
 def main(df1, df2, gdf):
-    obj_hex1 = create_geometry(df1, size_poligon)
-    obj_hex2 = create_geometry(df2, size_poligon)
+    full_hex = pd.DataFrame({"h3_8": olhon_hex.index})
+
+    obj_hex1 = create_geometry(df1, size_poligon, full_hex)
+    obj_hex2 = create_geometry(df2, size_poligon, full_hex)
+
     routes_gdf = load_routes()
 
     other_business = 'общественное питание' if business == 'места размещения' else 'места размещения'
@@ -90,8 +110,8 @@ def main(df1, df2, gdf):
     # Применяем нормализацию ко всем столбцам
     for column in normalization_data.columns:
         obj_hex1[f"{column}_z_score"] = normalize_data(normalization_data[column].values)
-
-        print(obj_hex1[f"{column}_z_score"],"  ",normalization_data[column].values)
+        if column=='object_count':
+            print(obj_hex1[f"{column}_z_score"],"  ",normalization_data[column].values)
 
     m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=size_poligon)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
