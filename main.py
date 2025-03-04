@@ -16,6 +16,7 @@ from map_create import create_maps
 from shapely.ops import nearest_points
 from shapely.geometry import Point
 from pyproj import Transformer
+from zoning_olkhon import gdfVec
 
 business = 'места размещения'
 size_poligon = 7
@@ -50,6 +51,14 @@ def calculate_landmarks_within_radius(polygon, df_landmark, radius):
             count += 1
     return count
 
+# Функция для определения степени природоохранных ограничений по пересечению
+def calculate_degree_landshaft_zone(polygon, gdfVec):
+    for _, zone in gdfVec.iterrows():
+        if polygon.intersects(zone["geometry"]):
+            return zone["degree"]  # Возвращаем степень природоохранных ограничений
+    return 3  # Если не попал ни в одну зону, то минимальные ограничения
+
+
 def create_geometry(df, size_poligon, full_hex):
     if len(df) > 0:
         df["h3_8"] = df.apply(lambda row: h3.geo_to_h3(row["lat"], row["lng"], size_poligon), axis=1)
@@ -69,17 +78,14 @@ def create_geometry(df, size_poligon, full_hex):
 
     return obj_hex
 
-
-
-
 def get_color(z_score):
     if pd.isna(z_score):
         return "gray"  # Серые полигоны для пустых ячеек
-    elif z_score > 1.5:
+    elif z_score > 0.9427:
         return "red"
-    elif z_score > 0.5:
-        return "orange"
-    elif z_score > -0.5:
+    elif z_score > 0.2665:
+        return "green"
+    elif z_score > -0.4097:
         return "yellow"
     else:
         return "green"
@@ -98,6 +104,8 @@ def main(df1, df2, gdf):
     obj_hex1["other_object_count"] = obj_hex1["h3_8"].map(obj_hex2.set_index("h3_8")["object_count"]).fillna(0)
     obj_hex1["distance_to_route"] = obj_hex1["geometry"].apply(lambda geom: calculate_distance_to_routes(geom, routes_gdf))
     obj_hex1["landmark_count"] = obj_hex1["geometry"].apply(lambda geom: calculate_landmarks_within_radius(geom, df_landmark_olkhon, 2500))
+    obj_hex1["degree_landshaft_zone"] = obj_hex1["geometry"].apply(lambda geom: calculate_degree_landshaft_zone(geom, gdfVec))
+
 
     # Формируем таблицу для нормализации
     normalization_data = pd.DataFrame({
@@ -105,13 +113,13 @@ def main(df1, df2, gdf):
         'other_object_count': obj_hex1['other_object_count'],
         'distance_to_route': obj_hex1['distance_to_route'],
         'landmark_count': obj_hex1['landmark_count'],
+        'degree_landshaft_zone': obj_hex1["degree_landshaft_zone"],
         'degree_favorability':0
     })
 
     # Применяем нормализацию ко всем столбцам
     for column in normalization_data.columns:
-        obj_hex1[f"{column}_z_score"] = normalize_data(normalization_data[column].values)
-  
+        obj_hex1[f"{column}_z_score"] = normalize_data(normalization_data[column].values,column_name=column)
 
     # Подсчет коэффициента благоприятствования
     obj_hex1["degree_favorability_z_score"] = (
@@ -119,11 +127,11 @@ def main(df1, df2, gdf):
             obj_hex1["distance_to_route_z_score"] +
             obj_hex1["landmark_count_z_score"] -
             obj_hex1["other_object_count_z_score"]
-    )
+    ) * obj_hex1["degree_landshaft_zone_z_score"]
 
     # Заполняем в таблице normalization_data
-    normalization_data["degree_favorability"] = obj_hex1["degree_favorability_z_score"]        
-    print("Normalizetable ",normalization_data)
+    normalization_data["degree_favorability"] = obj_hex1["degree_favorability_z_score"] 
+    print(obj_hex1["degree_favorability_z_score"])
 
     m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=size_poligon)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
