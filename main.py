@@ -6,7 +6,7 @@ import pandas as pd
 import h3pandas
 import numpy as np
 from shapely.geometry import Point
-from analyze_data import normalize_data
+from analyze_data import z_normalize_data, minmax_normalize_data, corr_data
 from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
 from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
 from connect_bd import df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj, df_pl_pros, df_pl_cons
@@ -116,11 +116,14 @@ def main(df1, df2, gdf):
         'degree_landshaft_zone': obj_hex1["degree_landshaft_zone"],
         'degree_favorability':0
     })
+    print('First Normalize from 1 to -1: ',minmax_normalize_data(normalization_data))
 
+    '''print("Корреляция: ", normalization_data.corr())'''
     # Применяем нормализацию ко всем столбцам
     for column in normalization_data.columns:
-        obj_hex1[f"{column}_z_score"] = normalize_data(normalization_data[column].values,column_name=column)
-
+        obj_hex1[f"{column}_z_score"] = z_normalize_data(normalization_data[column].values,column_name=column)
+        
+    print('Second Normalize from 1 to -1: ',minmax_normalize_data(normalization_data))
     # Подсчет коэффициента благоприятствования
     obj_hex1["degree_favorability_z_score"] = (
             obj_hex1["object_count_z_score"] +
@@ -131,7 +134,7 @@ def main(df1, df2, gdf):
 
     # Заполняем в таблице normalization_data
     normalization_data["degree_favorability"] = obj_hex1["degree_favorability_z_score"] 
-    print(obj_hex1["degree_favorability_z_score"])
+    #print(min(obj_hex1["degree_favorability_z_score"]), max(obj_hex1["degree_favorability_z_score"]))
 
     m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=size_poligon)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
