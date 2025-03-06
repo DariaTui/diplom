@@ -11,7 +11,6 @@ def z_normalize_data(data, column_name=None):
         result[data == 3] = 1
         return result
     else:
-    
         mean = np.mean(data)  # Среднее значение
         std_dev = np.std(data)  # Стандартное отклонение
 
@@ -22,13 +21,27 @@ def z_normalize_data(data, column_name=None):
         z_scores = (data - mean) / std_dev
 
         return z_scores  # Возвращаем нормализованные значения
-#print(normalize_data(data))
 
-def minmax_normalize_data(X):
-    X_std = (X - X.min(axis=0)) / (X.max(axis=0) - X.min(axis=0))
-    X_scaled = X_std * (1 - (-1)) + (-1)
-    return X_scaled
+def minmax_normalize_data(data, column_name=None):
+    if column_name == "degree_landshaft_zone":
+        result = np.zeros(len(data))
+        result[data == 2] = 1
+        result[data == 3] = 1
+        return result
+    elif column_name == "degree_favorability_z_score":
+        mask_zeros = data == 0
+        df_normalized = data.copy()
+        X_std = (data - data.min()) / (data.max() - data.min())
+        X_std[mask_zeros] = 0
+        df_normalized = X_std * (1 - 0) + 0
+        return df_normalized
+    else:
+    #if column_name != "degree_landshaft_zone" and column_name != 'degree_favorability':
+        df_normalized = data.copy()
+        X_std = (data - data.min()) / (data.max() - data.min())
+        df_normalized = X_std * (1 - 0) + 0
+        return df_normalized
+
 
 def corr_data(data1, column_name=None):
-
     return data1.corr()

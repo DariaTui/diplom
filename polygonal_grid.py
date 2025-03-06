@@ -5,7 +5,7 @@ import geopandas as gpd
 import pandas as pd
 import h3pandas
 from shapely.geometry import Point
-from analyze_data import normalize_data
+from analyze_data import z_normalize_data
 #передача переменных из файла с выборкой данных из бд
 from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
 from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
@@ -84,7 +84,7 @@ def main(df, gdf):
     obj_hex = create_geometry(df)  # Создаём гексагоны с подсчётом объектов
 
     # **Добавляем нормализацию данных**
-    obj_hex["z_score"] = normalize_data(obj_hex["object_count"])  # Нормализуем количество объектов
+    obj_hex["z_score"] = z_normalize_data(obj_hex["object_count"])  # Нормализуем количество объектов
 
     # **Создание карты**
     m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=size_poligon)

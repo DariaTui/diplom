@@ -81,11 +81,11 @@ def create_geometry(df, size_poligon, full_hex):
 def get_color(z_score):
     if pd.isna(z_score):
         return "gray"  # Серые полигоны для пустых ячеек
-    elif z_score > 0.9427:
+    elif z_score > 0.4:
         return "red"
-    elif z_score > 0.2665:
-        return "green"
-    elif z_score > -0.4097:
+    elif z_score == 0:
+        return "gray"
+    elif z_score < 0.4:
         return "yellow"
     else:
         return "green"
@@ -116,22 +116,27 @@ def main(df1, df2, gdf):
         'degree_landshaft_zone': obj_hex1["degree_landshaft_zone"],
         'degree_favorability':0
     })
-    print('First Normalize from 1 to -1: ',minmax_normalize_data(normalization_data))
-
-    '''print("Корреляция: ", normalization_data.corr())'''
+    #normalization_data = minmax_normalize_data(normalization_data)
+    
     # Применяем нормализацию ко всем столбцам
+        # Применяем нормализацию ко всем столбцам
     for column in normalization_data.columns:
-        obj_hex1[f"{column}_z_score"] = z_normalize_data(normalization_data[column].values,column_name=column)
+        print(max(normalization_data[column].values))
+        obj_hex1[f"{column}_z_score"] = minmax_normalize_data(normalization_data[column].values, column_name=column)
+        print(obj_hex1[f"{column}_z_score"])
+
         
-    print('Second Normalize from 1 to -1: ',minmax_normalize_data(normalization_data))
     # Подсчет коэффициента благоприятствования
     obj_hex1["degree_favorability_z_score"] = (
-            obj_hex1["object_count_z_score"] +
+            obj_hex1["other_object_count_z_score"] +
             obj_hex1["distance_to_route_z_score"] +
             obj_hex1["landmark_count_z_score"] -
-            obj_hex1["other_object_count_z_score"]
+            obj_hex1["object_count_z_score"]
     ) * obj_hex1["degree_landshaft_zone_z_score"]
-
+    print(obj_hex1["degree_favorability_z_score"].values)
+    
+    obj_hex1["degree_favorability_z_score"]=minmax_normalize_data(obj_hex1["degree_favorability_z_score"].values,column_name="degree_favorability_z_score")
+    print(obj_hex1["degree_favorability_z_score"].values)
     # Заполняем в таблице normalization_data
     normalization_data["degree_favorability"] = obj_hex1["degree_favorability_z_score"] 
     #print(min(obj_hex1["degree_favorability_z_score"]), max(obj_hex1["degree_favorability_z_score"]))
