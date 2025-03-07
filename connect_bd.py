@@ -70,7 +70,7 @@ def select_caterings():
 #функция по выбору общепитов из бд
 def select_pl():
 
-    query="SELECT * FROM placement_location_olkhon"
+    query="SELECT * FROM placement_location_olkhon_test"
     pd_pl_data = pd.read_sql(query,connection)
     df_pl = pd_pl_data[['id','name','lat','lon','pros','cons']]
 

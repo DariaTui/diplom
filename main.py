@@ -18,7 +18,7 @@ from shapely.geometry import Point
 from pyproj import Transformer
 from zoning_olkhon import gdfVec
 
-business = 'места размещения'
+business = 'общественное питание'
 size_poligon = 7
 place = "остров Ольхон"
 gdf = ox.geocode_to_gdf(place, which_result=1)
@@ -27,6 +27,8 @@ olhon_hex = gdf.h3.polyfill_resample(size_poligon)
 df_landmark_olkhon = pd.DataFrame({"id": df_id, "lat": df_lat, "lng": df_lon, "name": name_obj})
 
 transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
+
+weights = [1,1,1,1,1]
 
 def load_routes():
     file_path = "datas/qgis/routes_Baikal.geojson"
@@ -81,11 +83,11 @@ def create_geometry(df, size_poligon, full_hex):
 def get_color(z_score):
     if pd.isna(z_score):
         return "gray"  # Серые полигоны для пустых ячеек
-    elif z_score > 0.4:
+    elif z_score > 0.6:
         return "red"
     elif z_score == 0:
         return "gray"
-    elif z_score < 0.4:
+    elif z_score < 0.3:
         return "yellow"
     else:
         return "green"
@@ -121,9 +123,9 @@ def main(df1, df2, gdf):
     # Применяем нормализацию ко всем столбцам
         # Применяем нормализацию ко всем столбцам
     for column in normalization_data.columns:
-        print(max(normalization_data[column].values))
+
         obj_hex1[f"{column}_z_score"] = minmax_normalize_data(normalization_data[column].values, column_name=column)
-        print(obj_hex1[f"{column}_z_score"])
+
 
         
     # Подсчет коэффициента благоприятствования
@@ -133,10 +135,10 @@ def main(df1, df2, gdf):
             obj_hex1["landmark_count_z_score"] -
             obj_hex1["object_count_z_score"]
     ) * obj_hex1["degree_landshaft_zone_z_score"]
-    print(obj_hex1["degree_favorability_z_score"].values)
-    
+
+    #нормализация КБС
     obj_hex1["degree_favorability_z_score"]=minmax_normalize_data(obj_hex1["degree_favorability_z_score"].values,column_name="degree_favorability_z_score")
-    print(obj_hex1["degree_favorability_z_score"].values)
+
     # Заполняем в таблице normalization_data
     normalization_data["degree_favorability"] = obj_hex1["degree_favorability_z_score"] 
     #print(min(obj_hex1["degree_favorability_z_score"]), max(obj_hex1["degree_favorability_z_score"]))

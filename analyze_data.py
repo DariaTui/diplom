@@ -32,8 +32,13 @@ def minmax_normalize_data(data, column_name=None):
         mask_zeros = data == 0
         df_normalized = data.copy()
         X_std = (data - data.min()) / (data.max() - data.min())
-        X_std[mask_zeros] = 0
-        df_normalized = X_std * (1 - 0) + 0
+        df_normalized = X_std * (1 - (0)) + (0)
+        df_normalized[mask_zeros] = 0
+        return df_normalized
+    elif column_name == "distance_to_route":
+        df_normalized = data.copy()
+        X_std = (data - data.min()) / (data.max() - data.min())
+        df_normalized = X_std * (1 - (-1)) + (-1)
         return df_normalized
     else:
     #if column_name != "degree_landshaft_zone" and column_name != 'degree_favorability':

@@ -1,4 +1,4 @@
-name;rating;min_price;rating.quality_of_sleep;rating.location;rating.service;rating.cleanness;rating.meal;lon;lat;id
+name;rating_total;min_price;rating_q_sleep;rating_q_loc;rating_q_service;rating_q_cleanness;rating_q_meal;lon;lat;id_place
 Вдохновение;8.5;3500;8.5;8.9;8.1;8.5;8.5;107.354812;53.196358;496528_101hotels
 Кемпинг-отель Ольхон;8.9;3000;8.7;8.9;8.9;9.1;9.6;107.35403;53.194243;249578_101hotels
 Баргузин;9.2;6500;9.3;9.8;9.1;9.4;10;107.351443;53.200021;570584_101hotels

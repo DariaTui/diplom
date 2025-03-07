@@ -17,7 +17,7 @@ from connect_bd import connection
 
 TABLES = {
     "catering": {"catering_olkhon"},
-    "placement": {"placement_location_olkhon"},
+    "placement": {"placement_location_olkhon_test"},
     "catering_r": {"reviews_caterings"},
     "placement_r": {"reviews_pl_olkhon"}
 }

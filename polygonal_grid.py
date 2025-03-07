@@ -17,7 +17,7 @@ from shapely.geometry import Polygon
 from map_create import create_maps
 
 
-business = 'места размещения'
+business = 'общественное питание'
 size_poligon = 7
 #тип который пользователь выберет как сферу бизнеса
 type_business = ''
