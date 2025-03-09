@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система поддержки решений</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+        }
+        .form-container {
+            width: 30%;
+        }
+        .map-container {
+            width: 65%;
+        }
+        iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h3>Выберите тип бизнеса</h3>
+        <select id="business-type">
+            <option value="public_eating">Общественное питание</option>
+            <option value="accommodation_places">Место размещения</option>
+        </select>
+        <button id="update-map">Обновить карту</button>
+        <button id="switch-map">Зонирование зон</button>
+    </div>
+
+    <div class="map-container">
+        <iframe id="map-frame" src="{{ url_for('static', filename=map_file) }}"></iframe>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+    $("#update-map").click(function() {
+        let businessType = $("#business-type").val();
+        $.post("/update_map", { business: businessType }, function(data) {
+            $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime()); // Добавляем уникальный параметр
+        });
+    });
+
+    $("#switch-map").click(function() {
+        $.post("/switch_map", function(data) {
+            $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime());
+        });
+    });
+});
+
+    </script>
+
+</body>
+</html>

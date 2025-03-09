@@ -20,9 +20,13 @@ from zoning_olkhon import gdfVec
 
 business = 'общественное питание'
 size_poligon = 7
+
+#add to app.py!!!!!!!!!!!!!!!
 place = "остров Ольхон"
 gdf = ox.geocode_to_gdf(place, which_result=1)
 m = folium.Map([gdf.centroid.y, gdf.centroid.x])
+#############!!!!!!!!!!!
+
 olhon_hex = gdf.h3.polyfill_resample(size_poligon)
 df_landmark_olkhon = pd.DataFrame({"id": df_id, "lat": df_lat, "lng": df_lon, "name": name_obj})
 
@@ -101,7 +105,7 @@ def main(df1, df2, gdf):
 
     routes_gdf = load_routes()
 
-    other_business = 'общественное питание' if business == 'места размещения' else 'места размещения'
+    other_business = "общественное питание" if business == "места размещения" else "места размещения"
 
     obj_hex1["other_object_count"] = obj_hex1["h3_8"].map(obj_hex2.set_index("h3_8")["object_count"]).fillna(0)
     obj_hex1["distance_to_route"] = obj_hex1["geometry"].apply(lambda geom: calculate_distance_to_routes(geom, routes_gdf))
@@ -119,13 +123,12 @@ def main(df1, df2, gdf):
         'degree_favorability':0
     })
     #normalization_data = minmax_normalize_data(normalization_data)
-    
+    #print(corr_data(normalization_data))
     # Применяем нормализацию ко всем столбцам
-        # Применяем нормализацию ко всем столбцам
     for column in normalization_data.columns:
 
         obj_hex1[f"{column}_z_score"] = minmax_normalize_data(normalization_data[column].values, column_name=column)
-
+        
 
         
     # Подсчет коэффициента благоприятствования
@@ -138,11 +141,11 @@ def main(df1, df2, gdf):
 
     #нормализация КБС
     obj_hex1["degree_favorability_z_score"]=minmax_normalize_data(obj_hex1["degree_favorability_z_score"].values,column_name="degree_favorability_z_score")
-
+    
     # Заполняем в таблице normalization_data
     normalization_data["degree_favorability"] = obj_hex1["degree_favorability_z_score"] 
     #print(min(obj_hex1["degree_favorability_z_score"]), max(obj_hex1["degree_favorability_z_score"]))
-
+ 
     m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=size_poligon)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
 
@@ -163,15 +166,17 @@ def main(df1, df2, gdf):
     return m
 
 def choose_business(business):
-    if business == 'общественное питание':
+    if business == "public_eating":
         return pd.DataFrame({"id": df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name": name_cat_obj, "pros": df_cat_pros, "cons": df_cat_cons})
-    if business == "места размещения":
+    if business == "accommodation_places":
         return pd.DataFrame({"id": df_pl_id, "lat": df_pl_lat, "lng": df_pl_lon, "name": name_pl_obj, "pros": df_pl_pros, "cons": df_pl_cons})
 
-def filter_type(gdf, business):
+def filter_type(gdf=gdf, business="public_eating"):
     df1 = choose_business(business)
-    df2 = choose_business("общественное питание" if business == "места размещения" else "места размещения")
+    df2 = choose_business("public_eating" if business == "accommodation_places" else "accommodation_places")
     m = main(df1, df2, gdf)
-    create_maps("map.html", m)
+    file_html = create_maps("kbs_map.html", m)
+    return file_html
 
-filter_type(gdf, business)
+
+filter_type()

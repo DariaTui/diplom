@@ -48,5 +48,5 @@ def minmax_normalize_data(data, column_name=None):
         return df_normalized
 
 
-def corr_data(data1, column_name=None):
-    return data1.corr()
+def corr_data(data, column_name=None):
+    return data.corr()

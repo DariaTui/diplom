@@ -4,7 +4,7 @@ import networkx as nx
 import webbrowser
 import geopandas as gpd
 from shapely.wkt import loads
-from polygonal_grid import df_olkhon, place, m 
+from density_obj import df_olkhon, place, m 
 from map_create import create_maps
 
 file_name = "map_routes.html"

@@ -1,0 +1,23 @@
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+#mapid {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#business-form {
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+#switcher {
+    margin-top: 20px;
+}
