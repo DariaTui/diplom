@@ -17,7 +17,7 @@ from shapely.geometry import Polygon
 from map_create import create_maps
 
 
-business = "public_eating"
+type_obj = "public_eating"
 size_poligon = 7
 #тип который пользователь выберет как сферу бизнеса
 type_business = ''
@@ -78,7 +78,7 @@ def main(df, gdf=gdf):
     folium.GeoJson(olhon_hex, color="green").add_to(m)
 
     for _, row in obj_hex.iterrows():
-        tooltip_text = (f"{business}: {row['object_count']}")
+        tooltip_text = (f"{type_obj}: {row['object_count']}")
         folium.GeoJson(
             data=row["geometry"].__geo_interface__,
             style_function=lambda feature, count=row['object_count']: {
@@ -125,18 +125,20 @@ def markers_obj(map,df):
 #   webbrowser.open("map.html")
 
  # определение выборки по бизнесу(общепит, места размещения и тд)
-def choose_business(business): 
-    if business == "public_eating":
+def choose_obj(type_obj): 
+    if type_obj == "public_eating":
         # создается dataFrame с переданными данными caterings
         return pd.DataFrame({"id":df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name":name_cat_obj, "pros":df_cat_pros, "cons":df_cat_cons})
-    if business == "accommodation_places":
+    if type_obj == "accommodation_places":
         return pd.DataFrame({"id":df_pl_id, "lat": df_pl_lat, "lng": df_pl_lon, "name":name_pl_obj, "pros":df_pl_pros, "cons":df_pl_cons})
+    if type_obj == "landmarks":
+        return pd.DataFrame({"id":df_id,"lat": df_lat, "lng": df_lon, "name":name_obj})
 
 
 # создается dataFrame с типами и выборка значений по выбранному типу бизнеса
-def filter_type(gdf, type_obj, business, type_business,m):
-    df = choose_business(business)
-    if type_business!='' and type_obj!='':
+def density_map_function(gdf=gdf, type_obj="", type_business=""):
+    df = choose_obj(type_obj)
+    if type_business!='':
         df_type = pd.DataFrame({"type":type_obj}) 
         filtered_df = df_type[df_type['type'].apply(lambda x: type_business in x if isinstance(x, list) else x == type_business)]
         indexes = filtered_df.index #получение индексов заданных типов
@@ -145,17 +147,17 @@ def filter_type(gdf, type_obj, business, type_business,m):
         m = main(filter_df,gdf)
         #m = markers_obj(m, df_landmark_olkhon)
         #m = create_routes()
-        create_maps(f"{business}_density.html",m)
-        webbrowser.open("static\\"+f"{business}_density.html")
+        return create_maps(f"{type_obj}_density.html",m)
+        # webbrowser.open("static\\"+f"{type_obj}_density.html")
     else:        
         m = main(df,gdf)
         #m = markers_obj(m, df_landmark_olkhon)
         #m = create_routes(m)
-        create_maps(f"{business}_density.html",m)
-        webbrowser.open("static\\"+f"{business}_density.html")
+        return create_maps(f"{type_obj}_density.html",m)
+        # webbrowser.open("static\\"+f"{type_obj}_density.html")
     
     
 #print(filter_type(df_olkhon,type_obj, type_business,m))
 #print(filter_type(df_pl_olkhon,gdf,type_obj,type_business,m))
-filter_type(gdf,type_obj,business,type_business,m)
+density_map_function(gdf=gdf,type_obj=type_obj,type_business="")
 

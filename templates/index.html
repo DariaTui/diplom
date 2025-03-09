@@ -38,12 +38,14 @@
             <option value="public_eating">Общественное питание</option>
             <option value="accommodation_places">Место размещения</option>
         </select>
-        <button id="update-map">Обновить карту</button>
+    <div><button id="update-map">Обновить карту</button></div>
         <button id="switch-map">Зонирование зон</button>
     </div>
 
     <div class="map-container">
         <iframe id="map-frame" src="{{ url_for('static', filename=map_file) }}"></iframe>
+
+        <button id="density-map">Карта плотности</button>
     </div>
 
     <script>
@@ -58,6 +60,13 @@
     $("#switch-map").click(function() {
         $.post("/switch_map", function(data) {
             $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime());
+        });
+    });
+
+    $("#density-map").click(function() {
+        let businessType = $("#business-type").val();
+        $.post("/density_map", { business: businessType }, function(data) {
+            $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime()); // Добавляем уникальный параметр
         });
     });
 });
