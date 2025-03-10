@@ -28,6 +28,9 @@
             padding: 10px;
             cursor: pointer;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -38,39 +41,146 @@
             <option value="public_eating">Общественное питание</option>
             <option value="accommodation_places">Место размещения</option>
         </select>
-    <div><button id="update-map">Обновить карту</button></div>
-        <button id="switch-map">Зонирование зон</button>
+        <button id="update-map">Обновить карту</button>
+        <button id="switch-map">Построить карту зонирования зон</button>
+
+        <h3>Построить карту плотности</h3>
+        <select id="density_obj">
+            <option value="public_eating">Общественное питание</option>
+            <option value="accommodation_places">Место размещения</option>
+            <option value="attractions">Достопримечательности</option>
+        </select>
+        <button id="toggle-filters">Фильтры</button>
+
+        <!-- Фильтры для общественного питания -->
+        <div id="public-eating-filters" class="hidden">
+            <h4>Фильтры</h4>
+            <label>Цена:</label>
+            <select id="price">
+                <option value="all">Все</option>
+                <option value="1000-2000">От 1000 до 2000</option>
+                <option value="2000-3000">От 2000 до 3000</option>
+                <option value="3000+">От 3000 и выше</option>
+            </select>
+
+            <label>Рейтинг:</label>
+            <select id="rating">
+                <option value="all">Все</option>
+                <option value="0-3.0">До 3.0</option>
+                <option value="3.0-4.5">От 3.0 до 4.5</option>
+                <option value="4.5-5.0">От 4.5 до 5.0</option>
+            </select>
+
+            <label>Кухня:</label>
+            <select id="cuisine">
+                <option value="all">Все</option>
+                <option value="бурятская">Бурятская</option>
+                <option value="европейская">Европейская</option>
+                <option value="русская">Русская</option>
+            </select>
+
+            <label>Тип:</label>
+            <select id="place-type">
+                <option value="all">Все</option>
+                <option value="кафе">Кафе</option>
+                <option value="паб">Паб</option>
+                <option value="бар">Бар</option>
+                <option value="пиццерия">Пиццерия</option>
+                <option value="ресторан">Ресторан</option>
+            </select>
+        </div>
+
+        <!-- Фильтры для размещения -->
+        <div id="accommodation-filters" class="hidden">
+            <h4>Фильтры</h4>
+            <label>Цена:</label>
+            <select id="accommodation-price">
+                <option value="all">Все</option>
+                <option value="1000-2000">От 1000 до 2000</option>
+                <option value="2000-3000">От 2000 до 3000</option>
+                <option value="3000+">От 3000 и выше</option>
+            </select>
+
+            <label>Рейтинг:</label>
+            <select id="accommodation-rating">
+                <option value="all">Все</option>
+                <option value="0-3.0">До 3.0</option>
+                <option value="3.0-4.5">От 3.0 до 4.5</option>
+                <option value="4.5-5.0">От 4.5 до 5.0</option>
+            </select>
+        </div>
+
+        <button id="density-map">Отобразить</button>
     </div>
 
     <div class="map-container">
         <iframe id="map-frame" src="{{ url_for('static', filename=map_file) }}"></iframe>
-
-        <button id="density-map">Карта плотности</button>
     </div>
 
     <script>
         $(document).ready(function() {
-    $("#update-map").click(function() {
-        let businessType = $("#business-type").val();
-        $.post("/update_map", { business: businessType }, function(data) {
-            $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime()); // Добавляем уникальный параметр
-        });
-    });
+            $("#update-map").click(function() {
+                let businessType = $("#business-type").val();
+                $.post("/update_map", { business: businessType }, function(data) {
+                    $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime());
+                });
+            });
 
-    $("#switch-map").click(function() {
-        $.post("/switch_map", function(data) {
-            $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime());
-        });
-    });
+            $("#switch-map").click(function() {
+                $.post("/switch_map", function(data) {
+                    $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime());
+                });
+            });
 
-    $("#density-map").click(function() {
-        let businessType = $("#business-type").val();
-        $.post("/density_map", { business: businessType }, function(data) {
-            $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime()); // Добавляем уникальный параметр
-        });
-    });
-});
+            // Обработчик выбора бизнеса
+            $("#density_obj").change(function() {
+                let selectedType = $(this).val();
+                $(".hidden").hide(); // Скрываем все формы
+                if (selectedType === "public_eating") {
+                    $("#public-eating-filters").show();
+                } else if (selectedType === "accommodation_places") {
+                    $("#accommodation-filters").show();
+                }
+            });
 
+            // Кнопка "Фильтры" - сворачивание/разворачивание
+            $("#toggle-filters").click(function() {
+                let selectedType = $("#density_obj").val();
+                if (selectedType === "public_eating") {
+                    $("#public-eating-filters").toggle();
+                } else if (selectedType === "accommodation_places") {
+                    $("#accommodation-filters").toggle();
+                }
+            });
+
+            // Обработчик кнопки "Отобразить"
+            $("#density-map").click(function() {
+                let selectedType = $("#density_obj").val();
+                let filterData = {};
+
+                if (selectedType === "public_eating") {
+                    filterData = {
+                        type: selectedType,
+                        price: $("#price").val(),
+                        rating: $("#rating").val(),
+                        cuisine: $("#cuisine").val(),
+                        placeType: $("#place-type").val()
+                    };
+                } else if (selectedType === "accommodation_places") {
+                    filterData = {
+                        type: selectedType,
+                        price: $("#accommodation-price").val(),
+                        rating: $("#accommodation-rating").val()
+                    };
+                }
+
+                console.log(filterData); // Выводим в консоль (можно отправить на сервер)
+                
+                $.post("/density_map", filterData, function(data) {
+                    $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime());
+                });
+            });
+        });
     </script>
 
 </body>
