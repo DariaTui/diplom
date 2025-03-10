@@ -38,25 +38,30 @@ def separation_of_types(tables,req_unique_type):
     return types_obj
 
 # редактирование типов мест из бд
-def splitting_types(df,keywords):
+def splitting_types(df, keywords):
     type_obj = df["type"].values.tolist()
     for id_i, i in enumerate(type_obj):  # Используем enumerate для получения индекса
         if "," in i:
-            type_obj[id_i] = i.split(sep=",")  # Изменяем элемент списка по индексу
-        # изменение названий на англ для достопримечательностей
-        for key, value in keywords.items():
-            if key in i.lower():
-                type_obj[id_i] = value
-                break
-            
+            type_obj[id_i] = ",".join(word.strip() for word in i.split(","))  # Убираем пробелы и соединяем обратно через запятую
+        else:
+            type_obj[id_i] = i.strip()  # Убираем пробелы из одиночных значений
+
+    
     return type_obj
 
-#функция по выбору общепитов из бд
-def select_caterings():
+def clean_kitchen_column(df):
+    kitchen_obj = df["kitchen"].values.tolist()
+    for id_i, i in enumerate(kitchen_obj):
+        if isinstance(i, str) and "," in i:
+            kitchen_obj[id_i] = ",".join(word.strip() for word in i.split(","))  # Убираем пробелы и соединяем обратно через запятую
+        elif isinstance(i, str):
+            kitchen_obj[id_i] = i.strip()  # Убираем пробелы из одиночных значений
+    return kitchen_obj
 
-    query="SELECT * FROM catering_olkhon"
-    pd_cat_data = pd.read_sql(query,connection)
-    df_cat = pd_cat_data[['id','name','latitude','longitude','type','pros','cons']]
+def select_caterings():
+    query = "SELECT * FROM catering_olkhon"
+    pd_cat_data = pd.read_sql(query, connection)
+    df_cat = pd_cat_data[['id', 'name', 'latitude', 'longitude', 'type', 'pros', 'cons', 'midprice', 'kitchen', 'rating']]
 
     df_cat_id = df_cat["id"].values.tolist()
     df_cat_lat = df_cat["latitude"].values.tolist()
@@ -64,15 +69,21 @@ def select_caterings():
     name_cat_obj = df_cat["name"].values.tolist()
     df_cat_pros = df_cat["pros"].values.tolist()
     df_cat_cons = df_cat["cons"].values.tolist()
-    type_cat_obj = splitting_types(df_cat,keywords_caterings)
-    return df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
+
+    type_cat_obj = splitting_types(df_cat, keywords_caterings)
+    df_cat_kitchen = clean_kitchen_column(df_cat)
+
+    df_cat_midprice = df_cat["midprice"].values.tolist()
+    df_cat_rating = df_cat["rating"].values.tolist()
+
+    return df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons, df_cat_midprice, df_cat_kitchen, df_cat_rating
 
 #функция по выбору общепитов из бд
 def select_pl():
 
     query="SELECT * FROM placement_location_olkhon_test"
     pd_pl_data = pd.read_sql(query,connection)
-    df_pl = pd_pl_data[['id','name','lat','lon','pros','cons']]
+    df_pl = pd_pl_data[['id','name','lat','lon','pros','cons', 'min_price', 'rating_total']]
 
     df_pl_id = df_pl["id"].values.tolist()
     df_pl_lat = df_pl["lat"].values.tolist()
@@ -81,7 +92,10 @@ def select_pl():
     df_pl_pros = df_pl["pros"].values.tolist()
     df_pl_cons = df_pl["cons"].values.tolist()
 
-    return df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons
+    df_pl_minprice = df_pl["min_price"].values.tolist()
+    df_pl_rating = df_pl["rating_total"].values.tolist()
+
+    return df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons, df_pl_minprice, df_pl_rating
 
 #функция по выбору достопримечательностей из бд
 def select_sights(): 
@@ -109,8 +123,8 @@ connection = pymysql.connect(
 
 df_id, df_lat, df_lon, name_obj, type_obj = select_sights()
 
-df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons = select_caterings()
+df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons, df_cat_midprice, df_cat_kitchen, df_cat_rating = select_caterings()
 
-df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons = select_pl()
+df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons, df_pl_minprice, df_pl_rating = select_pl()
 
-#print(df_pl_id)
+#print(df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons, df_cat_midprice, df_cat_kitchen, df_cat_rating)
