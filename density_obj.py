@@ -169,6 +169,8 @@ def density_map_function(gdf=gdf, type_obj="", type_business="", price='', ratin
                 pass  # Если не удается разобрать цену, фильтрация не применяется
         if rating:
             try:
+                
+                print(df["rating"])
                 min_rating, max_rating = map(float, rating.split('-'))
                 df = df[(df["rating"] >= min_rating) & (df["rating"] <= max_rating)]
             except ValueError:
@@ -191,6 +193,7 @@ def density_map_function(gdf=gdf, type_obj="", type_business="", price='', ratin
                 pass
         if rating:
             try:
+                df["rating"] = pd.to_numeric(df["rating"], errors="coerce")
                 min_rating, max_rating = map(float, rating.split('-'))
                 df = df[(df["rating"] >= min_rating) & (df["rating"] <= max_rating)]
             except ValueError:
@@ -199,19 +202,19 @@ def density_map_function(gdf=gdf, type_obj="", type_business="", price='', ratin
     # landmarks фильтров не имеет, просто передаем df в main
     
     m = main(df, gdf)
+    print(df)
     if m != "":
         return create_maps(f"{type_obj}_density.html", m)
     else:
         return print("Данные не найдены. Возникла ошибка")
 
 
-density_map_function(
-    gdf=gdf, 
-    type_obj="public_eating", 
-    type_business="кафе", 
+density_map_function( 
+    type_obj="landmarks", 
+    type_business="", 
     price="", 
     rating="", 
-    kitchen="бурятская"
+    kitchen=""
 )
 
 

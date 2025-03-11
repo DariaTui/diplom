@@ -57,7 +57,7 @@ def density_map():
     price = request.form.get("price")
     rating = request.form.get("rating")
     kitchen = request.form.get("cuisine")  # Для общепита
-
+    print("ПЕРЕДАННЫЕ ДАННЫЕ !",type_obj,type_business,price,rating,kitchen)
     # Создаём карту
     map_path = create_density_map(type_obj, type_business, price, rating, kitchen)
     

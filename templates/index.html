@@ -56,15 +56,15 @@
         <div id="public-eating-filters" class="hidden">
             <h4>Фильтры</h4>
             <label>Цена:</label>
-            <select id="price">
+            <select id="cat-price">
                 <option value="" selected>Все</option>
                 <option value="1000-2000">От 1000 до 2000</option>
                 <option value="2000-3000">От 2000 до 3000</option>
-                <option value="3000+">От 3000 и выше</option>
+                <option value="3000-1000000">От 3000 и выше</option>
             </select>
 
             <label>Рейтинг:</label>
-            <select id="rating">
+            <select id="cat-rating">
                 <option value="" selected>Все</option>
                 <option value="0-3.0">До 3.0</option>
                 <option value="3.0-4.5">От 3.0 до 4.5</option>
@@ -72,8 +72,8 @@
             </select>
 
             <label>Кухня:</label>
-            <select id="cuisine">
-                <option value="" selected>Все</option>
+            <select id="cat-cuisine">
+                <option value="">Все</option>
                 <option value="бурятская">Бурятская</option>
                 <option value="европейская">Европейская</option>
                 <option value="русская">Русская</option>
@@ -82,8 +82,8 @@
             </select>
 
             <label>Тип:</label>
-            <select id="place-type">
-                <option value="" selected>Все</option>
+            <select id="cat-place-type">
+                <option value="">Все</option>
                 <option value="кафе">Кафе</option>
                 <option value="паб">Паб</option>
                 <option value="бар">Бар</option>
@@ -110,6 +110,8 @@
                 <option value="0-3.0">До 3.0</option>
                 <option value="3.0-4.5">От 3.0 до 4.5</option>
                 <option value="4.5-5.0">От 4.5 до 5.0</option>
+                <option value="5.0-7.0">От 5.0 до 7.0</option>
+                <option value="7.0-100.0">От 7.0</option>
             </select>
         </div>
 
@@ -176,6 +178,12 @@
                         rating: $("#accommodation-rating").val()
                     };
                 }
+                else if (selectedType === "landmarks") {
+                    filterData = {
+                        type: selectedType
+                    };
+                }
+
 
                 console.log(filterData); // Выводим в консоль (можно отправить на сервер)
                 
