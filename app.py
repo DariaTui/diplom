@@ -24,11 +24,11 @@ def create_zone_map():
     map_object.save(map_path)
     return map_path
 
-# def create_density_map(business_type):
-#     map_object = density_map_function(type_obj=business_type)
-#     map_path = os.path.join('static', f"{business_type}_density.html")
-#     map_object.save(map_path)
-#     return map_path
+def create_density_map(type_obj, type_business, price, rating, kitchen):
+    map_object = density_map_function(type_obj=type_obj,type_business=type_business, price=price, rating=rating, kitchen=kitchen)
+    map_path = os.path.join('static', f"{type_obj}_density.html")
+    map_object.save(map_path)
+    return map_path
 
 @app.route('/')
 def index():
@@ -45,11 +45,23 @@ def switch_map():
     map_path = create_zone_map()
     return jsonify({'map_file': map_path})
 
-# @app.route('/density_map', methods=['POST'])
-# def density_map():
-#     business_type = request.form['business']
-#     map_path = create_density_map(business_type)
-#     return jsonify({'map_file': map_path})
+@app.route('/density_map', methods=['POST']) 
+def density_map():
+    type_obj = request.form.get("type")
+    
+    if not type_obj:
+        return jsonify({'error': 'Missing type parameter'}), 400
+
+    # Получаем параметры, если они есть
+    type_business = request.form.get("placeType")  # Для общепита
+    price = request.form.get("price")
+    rating = request.form.get("rating")
+    kitchen = request.form.get("cuisine")  # Для общепита
+
+    # Создаём карту
+    map_path = create_density_map(type_obj, type_business, price, rating, kitchen)
+    
+    return jsonify({'map_file': map_path})
 
 if __name__ == '__main__':
     app.run(debug=True)

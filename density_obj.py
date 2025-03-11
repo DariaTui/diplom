@@ -60,7 +60,6 @@ def create_geometry(df, size_poligon, full_hex):
         obj_hex["geometry"] = obj_hex["h3_8"].apply(lambda h3_index: Polygon(h3.h3_to_geo_boundary(h3_index, geo_json=True)))
         return obj_hex
     except:
-        obj_hex=''
         return obj_hex 
 
     
@@ -83,7 +82,7 @@ def main(df, gdf=gdf):
     obj_hex = create_geometry(df, size_poligon, full_hex)
     m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=size_poligon)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
-    if obj_hex != '':
+    if not obj_hex.empty:
         for _, row in obj_hex.iterrows():
             tooltip_text = (f"{type_obj}: {row['object_count']}")
             folium.GeoJson(
@@ -148,14 +147,19 @@ def choose_obj(type_obj):
 
 
 # создается dataFrame с типами и выборка значений по выбранному типу бизнеса
-def density_map_function(gdf, type_obj="", type_business="", price='', rating='', kitchen=''):
+def density_map_function(gdf=gdf, type_obj="", type_business="", price='', rating='', kitchen=''):
     df = choose_obj(type_obj)
     
     # Фильтрация данных в зависимости от типа объекта
     if type_obj == "public_eating":
         if type_business:
             
-            df = df[df["type_business"].apply(lambda x: type_business.strip() in [i.strip() for i in x] if isinstance(x, list) else x.strip() == type_business.strip())]
+            df = df[df["type_business"].apply(lambda x: 
+                type_business.strip().lower() in [i.strip().lower() for i in x] 
+                if isinstance(x, list) 
+                else x.strip().lower() == type_business.strip().lower()
+            )]
+
 
         if price:
             try:
@@ -170,7 +174,13 @@ def density_map_function(gdf, type_obj="", type_business="", price='', rating=''
             except ValueError:
                 pass  # Если не удается разобрать рейтинг, фильтрация не применяется
         if kitchen:
-            df = df[df["kitchen"].apply(lambda x: kitchen in x.split(',') if isinstance(x, str) else False)]
+            # df = df[df["kitchen"].apply(lambda x: kitchen in x.split(',') if isinstance(x, str) else False)]
+            df = df[df["kitchen"].apply(lambda x: 
+                kitchen.strip().lower() in [i.strip().lower() for i in x.split(",")] 
+                if isinstance(x, str) 
+                else False
+            )]
+
     
     elif type_obj == "accommodation_places":
         if price:
@@ -187,7 +197,6 @@ def density_map_function(gdf, type_obj="", type_business="", price='', rating=''
                 pass
     
     # landmarks фильтров не имеет, просто передаем df в main
-    print("новый дф ",df)
     
     m = main(df, gdf)
     if m != "":
@@ -199,10 +208,10 @@ def density_map_function(gdf, type_obj="", type_business="", price='', rating=''
 density_map_function(
     gdf=gdf, 
     type_obj="public_eating", 
-    type_business="", 
+    type_business="кафе", 
     price="", 
-    rating="4.5-5.0", 
-    kitchen="морская"
+    rating="", 
+    kitchen="бурятская"
 )
 
 
