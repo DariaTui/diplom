@@ -121,6 +121,40 @@ connection = pymysql.connect(
             database="tourism"
         )
 
+
+def filter_olkhon(df):
+    """
+    Фильтрует DataFrame, удаляя строки, в которых координаты lat/lng выходят за пределы Ольхонского района.
+    """
+    # Границы острова Ольхон
+    min_lat, max_lat = 53.05, 53.42
+    min_lng, max_lng = 106.97, 108.76
+    
+    # Фильтрация DataFrame
+    df_filtered = df[(df['lat'].between(min_lat, max_lat)) & (df['lng'].between(min_lng, max_lng))]
+    
+    return df_filtered
+
+def choose_obj(type_obj):
+    if type_obj == "public_eating":
+        df = pd.DataFrame({
+            "id": df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name": name_cat_obj,
+            "pros": df_cat_pros, "cons": df_cat_cons, "price": df_cat_midprice,
+            "rating": df_cat_rating, "kitchen": df_cat_kitchen, "type_business": type_cat_obj
+        })
+    elif type_obj == "accommodation_places":
+        df = pd.DataFrame({
+            "id": df_pl_id, "lat": df_pl_lat, "lng": df_pl_lon, "name": name_pl_obj,
+            "pros": df_pl_pros, "cons": df_pl_cons, "price": df_pl_minprice, "rating": df_pl_rating
+        })
+    elif type_obj == "landmarks":
+        df = pd.DataFrame({"id": df_id, "lat": df_lat, "lng": df_lon, "name": name_obj})
+    else:
+        return None
+    
+    # Фильтруем по границам Ольхонского района
+    return filter_olkhon(df)
+
 df_id, df_lat, df_lon, name_obj, type_obj = select_sights()
 
 df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons, df_cat_midprice, df_cat_kitchen, df_cat_rating = select_caterings()

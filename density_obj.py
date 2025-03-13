@@ -8,9 +8,10 @@ import h3pandas
 from shapely.geometry import Point
 from analyze_data import z_normalize_data
 #передача переменных из файла с выборкой данных из бд
-from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
-from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons, df_cat_midprice, df_cat_kitchen, df_cat_rating
-from connect_bd import df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons, df_pl_minprice, df_pl_rating
+from connect_bd import choose_obj
+# from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
+# from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons, df_cat_midprice, df_cat_kitchen, df_cat_rating
+# from connect_bd import df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons, df_pl_minprice, df_pl_rating
 
 import h3
 from shapely.geometry import Polygon
@@ -31,14 +32,6 @@ m = folium.Map([gdf.centroid.y, gdf.centroid.x])
 
 olhon_hex = gdf.h3.polyfill_resample(size_poligon)
 # достопримечатеельности
-df_landmark_olkhon = pd.DataFrame({"id":df_id,"lat": df_lat, "lng": df_lon, "name":name_obj})
-
-# Фильтрация объектов, чтобы оставить только те, что находятся внутри границ Ольхона
-# def filter_points_within_island(df, gdf):
-#     island_polygon = gdf.geometry.iloc[0]  # Полигон острова Ольхон
-#     df["geometry"] = df.apply(lambda row: Point(row["lng"], row["lat"]), axis=1)  # Создание геометрии
-#     df_filtered = df[df["geometry"].apply(lambda point: point.within(island_polygon))]  # Фильтрация
-#     return df_filtered.drop(columns=["geometry"])  # Удаляем колонку с геометрией
 
 def create_geometry(df, size_poligon, full_hex):
     try:
@@ -131,19 +124,6 @@ def markers_obj(map,df):
 #   markers_obj(m,df_cat_olkhon)
 #   main(df_cat_olkhon)
 #   webbrowser.open("map.html")
-
- # определение выборки по бизнесу(общепит, места размещения и тд)
-def choose_obj(type_obj): 
-    if type_obj == "public_eating":
-        # создается dataFrame с переданными данными caterings
-        return pd.DataFrame({"id":df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name":name_cat_obj, "pros":df_cat_pros,
-                              "cons":df_cat_cons, "price":df_cat_midprice, "rating":df_cat_rating, "kitchen":df_cat_kitchen,
-                              "type_business":type_cat_obj})
-    if type_obj == "accommodation_places":
-        return pd.DataFrame({"id":df_pl_id, "lat": df_pl_lat, "lng": df_pl_lon, "name":name_pl_obj, "pros":df_pl_pros, 
-                             "cons":df_pl_cons, "price":df_pl_minprice, "rating":df_pl_rating})
-    if type_obj == "landmarks":
-        return pd.DataFrame({"id":df_id,"lat": df_lat, "lng": df_lon, "name":name_obj})
 
 
 # создается dataFrame с типами и выборка значений по выбранному типу бизнеса

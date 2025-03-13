@@ -7,9 +7,11 @@ import h3pandas
 import numpy as np
 from shapely.geometry import Point
 from analyze_data import z_normalize_data, minmax_normalize_data, corr_data
-from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
-from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
-from connect_bd import df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj, df_pl_pros, df_pl_cons
+
+# from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
+# from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
+from connect_bd import choose_obj
+
 import h3
 from shapely.geometry import Polygon
 from map_create import create_maps
@@ -28,7 +30,7 @@ m = folium.Map([gdf.centroid.y, gdf.centroid.x])
 #############!!!!!!!!!!!
 
 olhon_hex = gdf.h3.polyfill_resample(size_poligon)
-df_landmark_olkhon = pd.DataFrame({"id": df_id, "lat": df_lat, "lng": df_lon, "name": name_obj})
+# df_landmark_olkhon = pd.DataFrame({"id": df_id, "lat": df_lat, "lng": df_lon, "name": name_obj})
 
 transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
 
@@ -109,7 +111,7 @@ def main(df1, df2, gdf):
 
     obj_hex1["other_object_count"] = obj_hex1["h3_8"].map(obj_hex2.set_index("h3_8")["object_count"]).fillna(0)
     obj_hex1["distance_to_route"] = obj_hex1["geometry"].apply(lambda geom: calculate_distance_to_routes(geom, routes_gdf))
-    obj_hex1["landmark_count"] = obj_hex1["geometry"].apply(lambda geom: calculate_landmarks_within_radius(geom, df_landmark_olkhon, 2500))
+    obj_hex1["landmark_count"] = obj_hex1["geometry"].apply(lambda geom: calculate_landmarks_within_radius(geom, choose_obj("landmarks"), 2500))
     obj_hex1["degree_landshaft_zone"] = obj_hex1["geometry"].apply(lambda geom: calculate_degree_landshaft_zone(geom, gdfVec))
 
 
@@ -165,15 +167,15 @@ def main(df1, df2, gdf):
         ).add_to(m)
     return m
 
-def choose_business(business):
-    if business == "public_eating":
-        return pd.DataFrame({"id": df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name": name_cat_obj, "pros": df_cat_pros, "cons": df_cat_cons})
-    if business == "accommodation_places":
-        return pd.DataFrame({"id": df_pl_id, "lat": df_pl_lat, "lng": df_pl_lon, "name": name_pl_obj, "pros": df_pl_pros, "cons": df_pl_cons})
+# def choose_business(business):
+#     if business == "public_eating":
+#         return pd.DataFrame({"id": df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name": name_cat_obj, "pros": df_cat_pros, "cons": df_cat_cons})
+#     if business == "accommodation_places":
+#         return pd.DataFrame({"id": df_pl_id, "lat": df_pl_lat, "lng": df_pl_lon, "name": name_pl_obj, "pros": df_pl_pros, "cons": df_pl_cons})
 
 def filter_type(gdf=gdf, business="public_eating"):
-    df1 = choose_business(business)
-    df2 = choose_business("public_eating" if business == "accommodation_places" else "accommodation_places")
+    df1 = choose_obj(business)
+    df2 = choose_obj("public_eating" if business == "accommodation_places" else "accommodation_places")
     m = main(df1, df2, gdf)
     file_html = create_maps("kbs_map.html", m)
     return file_html
