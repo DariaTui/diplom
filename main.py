@@ -7,9 +7,6 @@ import h3pandas
 import numpy as np
 from shapely.geometry import Point
 from analyze_data import z_normalize_data, minmax_normalize_data, corr_data
-
-# from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
-# from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons
 from connect_bd import choose_obj
 
 import h3
@@ -22,7 +19,7 @@ from zoning_olkhon import gdfVec
 
 business = 'общественное питание'
 size_poligon = 7
-
+zoom=9
 #add to app.py!!!!!!!!!!!!!!!
 place = "остров Ольхон"
 gdf = ox.geocode_to_gdf(place, which_result=1)
@@ -89,15 +86,41 @@ def create_geometry(df, size_poligon, full_hex):
 def get_color(z_score):
     if pd.isna(z_score):
         return "gray"  # Серые полигоны для пустых ячеек
-    elif z_score > 0.6:
+    elif z_score > 0.67:
         return "red"
     elif z_score == 0:
         return "gray"
-    elif z_score < 0.3:
+    elif z_score < 0.33:
         return "yellow"
     else:
         return "green"
 
+# Функция для генерации легенды
+def add_legend(map_object):
+    legend_html = '''
+    <div style="
+        position: fixed;
+        bottom: 50px;
+        left: 50px;
+        width: 180px;
+        height: auto;
+        background-color: white;
+        z-index:9999;
+        font-size:14px;
+        padding: 10px;
+        border: 2px solid grey;
+        border-radius: 5px;
+    ">
+      <b>Легенда</b><br>
+
+      <i style="background: red; width: 20px; height: 10px; display: inline-block;"></i> Высокий КБС<br>
+      <i style="background: yellow; width: 20px; height: 10px; display: inline-block;"></i> Низкий КБС<br>
+      <i style="background: green; width: 20px; height: 10px; display: inline-block;"></i> Средний КБС<br>
+      <i style="background: grey; width: 20px; height: 10px; display: inline-block;"></i> Недоступная местность<br>
+
+    </div>
+    '''
+    map_object.get_root().html.add_child(folium.Element(legend_html))
 
 def main(df1, df2, gdf):
     full_hex = pd.DataFrame({"h3_8": olhon_hex.index})
@@ -124,18 +147,14 @@ def main(df1, df2, gdf):
         'degree_landshaft_zone': obj_hex1["degree_landshaft_zone"],
         'degree_favorability':0
     })
-    #normalization_data = minmax_normalize_data(normalization_data)
-    #print(corr_data(normalization_data))
-    # Применяем нормализацию ко всем столбцам
+
     for column in normalization_data.columns:
 
         obj_hex1[f"{column}_z_score"] = minmax_normalize_data(normalization_data[column].values, column_name=column)
         
-
-        
     # Подсчет коэффициента благоприятствования
     obj_hex1["degree_favorability_z_score"] = (
-            obj_hex1["other_object_count_z_score"] +
+            obj_hex1["other_object_count_z_score"] -
             obj_hex1["distance_to_route_z_score"] +
             obj_hex1["landmark_count_z_score"] -
             obj_hex1["object_count_z_score"]
@@ -148,13 +167,13 @@ def main(df1, df2, gdf):
     normalization_data["degree_favorability"] = obj_hex1["degree_favorability_z_score"] 
     #print(min(obj_hex1["degree_favorability_z_score"]), max(obj_hex1["degree_favorability_z_score"]))
  
-    m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=size_poligon)
+    m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=zoom)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
 
     for _, row in obj_hex1.iterrows():
-        tooltip_text = (f"{business}: {row['object_count']}"
-                        f"{other_business}: {int(row['other_object_count'])} (Z: {row['other_object_count_z_score']:.2f})\n"
-                        f"Расстояние до ближайшего маршрута: {row['distance_to_route']:.2f} м (Z: {row['distance_to_route_z_score']:.2f})\n"
+        tooltip_text = (f"{business}: {row['object_count']}<br>"
+                        f"{other_business}: {int(row['other_object_count'])} (Z: {row['other_object_count_z_score']:.2f})<br>\n"
+                        f"Расстояние до ближайшего маршрута: {row['distance_to_route']:.2f} м (Z: {row['distance_to_route_z_score']:.2f})<br>\n"
                         f"Достопримечательности в радиусе 2.5 км: {row['landmark_count']} (Z: {row['landmark_count_z_score']:.2f})")
         folium.GeoJson(
             data=row["geometry"].__geo_interface__,
@@ -165,6 +184,8 @@ def main(df1, df2, gdf):
             },
             tooltip=tooltip_text
         ).add_to(m)
+        # легенда
+    add_legend(m)
     return m
 
 # def choose_business(business):

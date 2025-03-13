@@ -38,7 +38,7 @@ def minmax_normalize_data(data, column_name=None):
     elif column_name == "distance_to_route":
         df_normalized = data.copy()
         X_std = (data - data.min()) / (data.max() - data.min())
-        df_normalized = X_std * (1 - (-1)) + (-1)
+        df_normalized = X_std * (1 - (0)) + (0)
         return df_normalized
     else:
     #if column_name != "degree_landshaft_zone" and column_name != 'degree_favorability':
@@ -50,3 +50,37 @@ def minmax_normalize_data(data, column_name=None):
 
 def corr_data(data, column_name=None):
     return data.corr()
+
+#метод оценки значимости рисков
+def assessment_significance_risks(df1,df2):
+    # Весовые коэффициенты для каждого критерия
+    weights = {
+        'competitor_density': 0.4,
+        'tourist_route_proximity': 0.35,
+        'landmark_proximity': 0.25
+    }
+    
+    polygons_ratings = []
+    
+    for polygon in polygons_data:
+        rating = (
+            polygon['competitor_density'] * weights['competitor_density'] +
+            polygon['tourist_route_proximity'] * weights['tourist_route_proximity'] +
+            polygon['landmark_proximity'] * weights['landmark_proximity']
+        )
+        
+        polygons_ratings.append({
+            'polygon_id': polygon['id'],
+            'rating': rating
+        })
+    
+    return sorted(polygons_ratings, key=lambda x: x['rating'], reverse=True)
+
+
+# Пример использования функции
+polygons_data = [
+    {'id': 1, 'competitor_density': 0.8, 'tourist_route_proximity': 0.6, 'landmark_proximity': 0.7},
+    {'id': 2, 'competitor_density': 0.9, 'tourist_route_proximity': 0.4, 'landmark_proximity': 0.8},
+    {'id': 3, 'competitor_density': 0.75, 'tourist_route_proximity': 0.65, 'landmark_proximity': 0.55}
+]
+

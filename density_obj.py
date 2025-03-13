@@ -5,22 +5,23 @@ import webbrowser
 import geopandas as gpd
 import pandas as pd
 import h3pandas
+import numpy as np
 from shapely.geometry import Point
-from analyze_data import z_normalize_data
+from analyze_data import minmax_normalize_data
 #передача переменных из файла с выборкой данных из бд
 from connect_bd import choose_obj
-# from connect_bd import df_id, df_lat, df_lon, name_obj, type_obj
-# from connect_bd import df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons, df_cat_midprice, df_cat_kitchen, df_cat_rating
-# from connect_bd import df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons, df_pl_minprice, df_pl_rating
 
 import h3
 from shapely.geometry import Polygon
 
 from map_create import create_maps
 
+from matplotlib.colors import LogNorm
+import matplotlib.cm as cm
 
 type_obj = "accommodation_places"
 size_poligon = 7
+zoom=9
 #тип который пользователь выберет как сферу бизнеса
 type_business = ''
 
@@ -57,40 +58,90 @@ def create_geometry(df, size_poligon, full_hex):
 
     
 
-# Функция для выбора цвета в зависимости от количества объектов
-def get_color(z_score):
-    if z_score > 1.5:
-        return "red"  # Высокая концентрация объектов
-    elif z_score > 0.5:
-        return "orange"  # Средняя концентрация
-    elif z_score > -0.5:
-        return "yellow"  # Небольшая концентрация
+# Цветовые градиенты (можно изменить под себя)
+COLOR_MAP = {
+
+    "низкая": "#fecc5c",  # Оранжевый
+    "средняя": "#ff6c56",  # Красный
+    "высокая": "#bd0026"  # Темно-красный
+}
+
+# Логарифмическое распределение цветов
+def get_color(value, min_val, max_val): 
+    """Возвращает цвет на основе логарифмической шкалы с 3 уровнями."""
+    
+    norm = LogNorm(vmin=max(min_val, 1), vmax=max_val)  # Лог-нормализация
+    thresholds = [
+        min_val, 
+        np.exp((np.log(min_val) + np.log(max_val)) / 2),  # Среднее геометрическое (центр шкалы)
+        max_val
+    ]
+
+    if value <= thresholds[1]:
+        return COLOR_MAP["низкая"]
+    elif value <= thresholds[2]:
+        return COLOR_MAP["средняя"]
     else:
-        return "green"  # Низкая концентрация
+        return COLOR_MAP["высокая"]
 
 
+# Функция для генерации легенды
+def add_legend(map_object):
+    legend_html = '''
+    <div style="
+        position: fixed;
+        bottom: 50px;
+        left: 50px;
+        width: 180px;
+        height: auto;
+        background-color: white;
+        z-index:9999;
+        font-size:14px;
+        padding: 10px;
+        border: 2px solid grey;
+        border-radius: 5px;
+    ">
+      <b>Легенда</b><br>
+
+      <i style="background: #fecc5c; width: 20px; height: 10px; display: inline-block;"></i> Низкая плотность<br>
+      <i style="background: #ff6c56; width: 20px; height: 10px; display: inline-block;"></i> Средняя плотность<br>
+      <i style="background: #bd0026; width: 20px; height: 10px; display: inline-block;"></i> Высокая плотность<br>
+
+    </div>
+    '''
+    map_object.get_root().html.add_child(folium.Element(legend_html))
+
+
+# Основная функция карты
 def main(df, gdf=gdf):
     full_hex = pd.DataFrame({"h3_8": olhon_hex.index})
 
     obj_hex = create_geometry(df, size_poligon, full_hex)
-    m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=size_poligon)
+    
+    if obj_hex.empty:
+        return print("Данные не найдены. Возникла ошибка")
+
+    min_count, max_count = obj_hex["object_count"].min(), obj_hex["object_count"].max()
+
+    m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=zoom)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
-    if not obj_hex.empty:
-        for _, row in obj_hex.iterrows():
-            tooltip_text = (f"{type_obj}: {row['object_count']}")
-            folium.GeoJson(
-                data=row["geometry"].__geo_interface__,
-                style_function=lambda feature, count=row['object_count']: {
-                    "color": get_color(count),
-                    "weight": 1,
-                    "fillOpacity": 0.5,
-                },
-                tooltip=tooltip_text
-            ).add_to(m)
-        return m
-    else:
-        m=''
-        return m
+
+    for _, row in obj_hex.iterrows():
+        tooltip_text = f"количество объектов: {row['object_count']}"
+        folium.GeoJson(
+            data=row["geometry"].__geo_interface__,
+            style_function=lambda feature, count=row["object_count"]: {
+                "color": get_color(count, min_count, max_count),
+                "weight": 1,
+                "fillOpacity": 0.5,
+            },
+            tooltip=tooltip_text
+        ).add_to(m)
+
+    # легенда
+    add_legend(m)
+
+    return m
 
 def markers_obj(map,df):
     # Вывод маркеров мест на карту
@@ -119,13 +170,6 @@ def markers_obj(map,df):
         webbrowser.open("map.html")
     return map
 
-#IMPORTANT
-# if __name__== '__main__':
-#   markers_obj(m,df_cat_olkhon)
-#   main(df_cat_olkhon)
-#   webbrowser.open("map.html")
-
-
 # создается dataFrame с типами и выборка значений по выбранному типу бизнеса
 def density_map_function(gdf=gdf, type_obj="", type_business="", price='', rating='', kitchen=''):
     df = choose_obj(type_obj)
@@ -149,8 +193,6 @@ def density_map_function(gdf=gdf, type_obj="", type_business="", price='', ratin
                 pass  # Если не удается разобрать цену, фильтрация не применяется
         if rating:
             try:
-                
-                print(df["rating"])
                 min_rating, max_rating = map(float, rating.split('-'))
                 df = df[(df["rating"] >= min_rating) & (df["rating"] <= max_rating)]
             except ValueError:
@@ -182,7 +224,7 @@ def density_map_function(gdf=gdf, type_obj="", type_business="", price='', ratin
     # landmarks фильтров не имеет, просто передаем df в main
     
     m = main(df, gdf)
-    print(df)
+
     if m != "":
         return create_maps(f"{type_obj}_density.html", m)
     else:
