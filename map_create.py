@@ -2,7 +2,6 @@ import os
 import webbrowser
 
 def create_maps(name_map,m):
-    # Проверяем папку "maps" и создаем её, если её нет
     if not os.path.exists("static"):
         os.makedirs("static")
 

@@ -6,7 +6,7 @@ import pandas as pd
 import h3pandas
 import numpy as np
 from shapely.geometry import Point
-from analyze_data import z_normalize_data, minmax_normalize_data, corr_data
+from analyze_data import minmax_normalize_data, corr_data
 from connect_bd import choose_obj
 
 import h3
@@ -18,7 +18,7 @@ from pyproj import Transformer
 from zoning_olkhon import gdfVec
 
 business = 'общественное питание'
-size_poligon = 7
+size_poligon = 8
 zoom=9
 #add to app.py!!!!!!!!!!!!!!!
 place = "остров Ольхон"
@@ -122,7 +122,32 @@ def add_legend(map_object):
     '''
     map_object.get_root().html.add_child(folium.Element(legend_html))
 
+def calculate_kbs_risk_assessment(risk_factors,obj_hex1):
+        # Пример рисков
+    kbs_risk = {
+        "object_count": (risk_factors[0][0] * risk_factors[0][1]),
+        "other_object_count": (risk_factors[1][0] * risk_factors[1][1]),
+        "distance_to_route": (risk_factors[2][0] * risk_factors[2][1]),
+        "landmark_count": (risk_factors[3][0] * risk_factors[3][1]),
+        "degree_landshaft_zone": (risk_factors[4][0] * risk_factors[4][1])
+    }
+    normalization_data = pd.DataFrame({
+        'object_count': obj_hex1['object_count'],
+        'other_object_count': obj_hex1['other_object_count'],
+        'distance_to_route': obj_hex1['distance_to_route'],
+        'landmark_count': obj_hex1['landmark_count'],
+        'degree_landshaft_zone': obj_hex1["degree_landshaft_zone"],
+        'degree_favorability':0
+    })
+    for column in normalization_data.columns:
+        if column in kbs_risk:  # Проверяем, есть ли критерий в kbs_risk
+            obj_hex1[f"{column}_score"] = normalization_data[column].values * kbs_risk[column]
+    
+    return obj_hex1
+
+
 def main(df1, df2, gdf):
+
     full_hex = pd.DataFrame({"h3_8": olhon_hex.index})
 
     obj_hex1 = create_geometry(df1, size_poligon, full_hex)
@@ -137,8 +162,6 @@ def main(df1, df2, gdf):
     obj_hex1["landmark_count"] = obj_hex1["geometry"].apply(lambda geom: calculate_landmarks_within_radius(geom, choose_obj("landmarks"), 2500))
     obj_hex1["degree_landshaft_zone"] = obj_hex1["geometry"].apply(lambda geom: calculate_degree_landshaft_zone(geom, gdfVec))
 
-
-    # Формируем таблицу для нормализации
     normalization_data = pd.DataFrame({
         'object_count': obj_hex1['object_count'],
         'other_object_count': obj_hex1['other_object_count'],
@@ -147,37 +170,33 @@ def main(df1, df2, gdf):
         'degree_landshaft_zone': obj_hex1["degree_landshaft_zone"],
         'degree_favorability':0
     })
-
+    
     for column in normalization_data.columns:
-
-        obj_hex1[f"{column}_z_score"] = minmax_normalize_data(normalization_data[column].values, column_name=column)
-        
+        obj_hex1[f"{column}_score"] = minmax_normalize_data(normalization_data[column].values, column_name=column)
+           
     # Подсчет коэффициента благоприятствования
-    obj_hex1["degree_favorability_z_score"] = (
-            obj_hex1["other_object_count_z_score"] -
-            obj_hex1["distance_to_route_z_score"] +
-            obj_hex1["landmark_count_z_score"] -
-            obj_hex1["object_count_z_score"]
-    ) * obj_hex1["degree_landshaft_zone_z_score"]
+    obj_hex1["degree_favorability_score"] = (
+            obj_hex1["other_object_count_score"] -
+            obj_hex1["distance_to_route_score"] +
+            obj_hex1["landmark_count_score"] -
+            obj_hex1["object_count_score"]
+    ) * obj_hex1["degree_landshaft_zone_score"]
 
     #нормализация КБС
-    obj_hex1["degree_favorability_z_score"]=minmax_normalize_data(obj_hex1["degree_favorability_z_score"].values,column_name="degree_favorability_z_score")
-    
-    # Заполняем в таблице normalization_data
-    normalization_data["degree_favorability"] = obj_hex1["degree_favorability_z_score"] 
-    #print(min(obj_hex1["degree_favorability_z_score"]), max(obj_hex1["degree_favorability_z_score"]))
+    obj_hex1["degree_favorability_score"]=minmax_normalize_data(obj_hex1["degree_favorability_score"].values,column_name="degree_favorability_score")
  
+
     m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=zoom)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
 
     for _, row in obj_hex1.iterrows():
         tooltip_text = (f"{business}: {row['object_count']}<br>"
-                        f"{other_business}: {int(row['other_object_count'])} (Z: {row['other_object_count_z_score']:.2f})<br>\n"
-                        f"Расстояние до ближайшего маршрута: {row['distance_to_route']:.2f} м (Z: {row['distance_to_route_z_score']:.2f})<br>\n"
-                        f"Достопримечательности в радиусе 2.5 км: {row['landmark_count']} (Z: {row['landmark_count_z_score']:.2f})")
+                        f"{other_business}: {int(row['other_object_count'])} (Z: {row['other_object_count_score']:.2f})<br>\n"
+                        f"Расстояние до ближайшего маршрута: {row['distance_to_route']:.2f} м (Z: {row['distance_to_route_score']:.2f})<br>\n"
+                        f"Достопримечательности в радиусе 2.5 км: {row['landmark_count']} (Z: {row['landmark_count_score']:.2f})")
         folium.GeoJson(
             data=row["geometry"].__geo_interface__,
-            style_function=lambda feature, z=row["degree_favorability_z_score"]: {
+            style_function=lambda feature, z=row["degree_favorability_score"]: {
                 "color": get_color(z),
                 "weight": 1,
                 "fillOpacity": 0.5,

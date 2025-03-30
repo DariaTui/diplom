@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, jsonify
+import osmnx as ox
 import folium
 import os
 import sys
-
+from map_create import create_maps
 # Добавляем пути к модулям
 sys.path.append(r'C:\Users\User\Desktop\studyyy\diplom\coding\diplom')
 from main import filter_type
@@ -10,6 +11,8 @@ from zoning_olkhon import zone_olkhon
 from density_obj import density_map_function
 
 app = Flask(__name__)
+
+
 
 def create_map(business_type):
 
@@ -30,9 +33,17 @@ def create_density_map(type_obj, type_business, price, rating, kitchen):
     map_object.save(map_path)
     return map_path
 
+def create_start_map(place = "остров Ольхон"):
+    gdf = ox.geocode_to_gdf(place, which_result=1)
+    m = folium.Map([gdf.geometry.iloc[0].centroid.y, gdf.geometry.iloc[0].centroid.x], zoom_start=9)
+    name_map = "start_map.html"
+    map = create_maps(name_map, m)
+    return name_map
+
 @app.route('/')
 def index():
-    return render_template('index.html', map_file='kbs_map.html')
+    file_html = create_start_map()
+    return render_template('index.html', map_file=file_html)
 
 @app.route('/update_map', methods=['POST'])
 def update_map():
