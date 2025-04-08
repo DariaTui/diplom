@@ -14,10 +14,10 @@ app = Flask(__name__)
 
 
 
-def create_map(business_type):
+def create_map(business_type, weights):
+    map_object = filter_type(business=business_type, weights=weights)
+    map_path = 'kbs_map.html'
 
-    map_object = filter_type(business=business_type)
-    map_path = os.path.join('static', 'kbs_map.html')
     map_object.save(map_path)
     return map_path
 
@@ -47,8 +47,14 @@ def index():
 
 @app.route('/update_map', methods=['POST'])
 def update_map():
-    business_type = request.form['business']
-    map_path = create_map(business_type)
+    data = request.get_json()
+    business_type = data.get('business', 'public_eating')
+    weights = data.get('weights', {})
+
+    # Преобразуем строковые значения весов в int
+    weights = {k: int(v) for k, v in weights.items()}
+
+    map_path = create_map(business_type, weights)
     return jsonify({'map_file': map_path})
 
 @app.route('/switch_map', methods=['POST'])

@@ -31,7 +31,13 @@ olhon_hex = gdf.h3.polyfill_resample(size_poligon)
 
 transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
 
-weights = [1,1,1,1,1]
+weights = {
+    "other_object_count_score": 1,
+    "distance_to_route_score": 1,
+    "landmark_count_score": 1,
+    "object_count_score": 1,
+    "degree_landshaft_zone_score": 1
+}
 
 def load_routes():
     file_path = "datas/qgis/routes_Baikal.geojson"
@@ -122,32 +128,11 @@ def add_legend(map_object):
     '''
     map_object.get_root().html.add_child(folium.Element(legend_html))
 
-def calculate_kbs_risk_assessment(risk_factors,obj_hex1):
-        # Пример рисков
-    kbs_risk = {
-        "object_count": (risk_factors[0][0] * risk_factors[0][1]),
-        "other_object_count": (risk_factors[1][0] * risk_factors[1][1]),
-        "distance_to_route": (risk_factors[2][0] * risk_factors[2][1]),
-        "landmark_count": (risk_factors[3][0] * risk_factors[3][1]),
-        "degree_landshaft_zone": (risk_factors[4][0] * risk_factors[4][1])
-    }
-    normalization_data = pd.DataFrame({
-        'object_count': obj_hex1['object_count'],
-        'other_object_count': obj_hex1['other_object_count'],
-        'distance_to_route': obj_hex1['distance_to_route'],
-        'landmark_count': obj_hex1['landmark_count'],
-        'degree_landshaft_zone': obj_hex1["degree_landshaft_zone"],
-        'degree_favorability':0
-    })
-    for column in normalization_data.columns:
-        if column in kbs_risk:  # Проверяем, есть ли критерий в kbs_risk
-            obj_hex1[f"{column}_score"] = normalization_data[column].values * kbs_risk[column]
+
+
+
+def main(df1, df2, gdf, weight_zone, business):
     
-    return obj_hex1
-
-
-def main(df1, df2, gdf):
-
     full_hex = pd.DataFrame({"h3_8": olhon_hex.index})
 
     obj_hex1 = create_geometry(df1, size_poligon, full_hex)
@@ -176,12 +161,13 @@ def main(df1, df2, gdf):
            
     # Подсчет коэффициента благоприятствования
     obj_hex1["degree_favorability_score"] = (
-            obj_hex1["other_object_count_score"] -
-            obj_hex1["distance_to_route_score"] +
-            obj_hex1["landmark_count_score"] -
-            obj_hex1["object_count_score"]
-    ) * obj_hex1["degree_landshaft_zone_score"]
-
+        (obj_hex1["other_object_count_score"] * weight_zone["other_object_count_score"]) -
+        (obj_hex1["distance_to_route_score"] * weight_zone["distance_to_route_score"]) +
+        (obj_hex1["landmark_count_score"] * weight_zone["landmark_count_score"]) -
+        (obj_hex1["object_count_score"] * weight_zone["object_count_score"])
+    ) * (obj_hex1["degree_landshaft_zone_score"] * weight_zone["degree_landshaft_zone_score"])
+    print("From file main ",(obj_hex1["other_object_count_score"] * weight_zone["other_object_count_score"]))
+    print("From file main ",weight_zone)
     #нормализация КБС
     obj_hex1["degree_favorability_score"]=minmax_normalize_data(obj_hex1["degree_favorability_score"].values,column_name="degree_favorability_score")
  
@@ -213,12 +199,13 @@ def main(df1, df2, gdf):
 #     if business == "accommodation_places":
 #         return pd.DataFrame({"id": df_pl_id, "lat": df_pl_lat, "lng": df_pl_lon, "name": name_pl_obj, "pros": df_pl_pros, "cons": df_pl_cons})
 
-def filter_type(gdf=gdf, business="public_eating"):
+def filter_type(weights, gdf=gdf, business="public_eating"):
     df1 = choose_obj(business)
     df2 = choose_obj("public_eating" if business == "accommodation_places" else "accommodation_places")
-    m = main(df1, df2, gdf)
+    m = main(df1, df2, gdf, weights, business)
     file_html = create_maps("kbs_map.html", m)
     return file_html
 
 
-filter_type()
+
+filter_type(weights=weights)

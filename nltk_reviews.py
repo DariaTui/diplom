@@ -201,3 +201,8 @@ def update_pros_cons(connection, table, table_r, id):
 add_cons_pros(query_select_text_pl, connection, list(TABLES["placement_r"])[0])
 # Запуск обновления
 update_pros_cons(connection, list(TABLES["placement"])[0], list(TABLES["placement_r"])[0], list(id["placement"])[0])
+
+# Запускаем обновление
+add_cons_pros(query_select_text_pl, connection, list(TABLES["catering_r"])[0])
+# Запуск обновления
+update_pros_cons(connection, list(TABLES["catering"])[0], list(TABLES["catering_r"])[0], list(id["catering"])[0])

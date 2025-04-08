@@ -41,7 +41,56 @@
             <option value="public_eating">Общественное питание</option>
             <option value="accommodation_places">Место размещения</option>
         </select>
+        
+        <h3>Настройка весовых коэффициентов (от 0 до 3)</h3>
+        
+        <label for="weight-other">Инфраструктурные объекты:</label>
+        <select id="weight-other">
+            <option value="0">0</option>
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+
+        </select><br>
+        
+        <label for="weight-distance">Расстояние до маршрута:</label>
+        <select id="weight-distance">
+            <option value="0">0</option>
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+
+        </select><br>
+        
+        <label for="weight-landmark">Достопримечательности:</label>
+        <select id="weight-landmark">
+            <option value="0">0</option>
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+
+        </select><br>
+        
+        <label for="weight-density">Плотность конкурентов:</label>
+        <select id="weight-density">
+            <option value="0">0</option>
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+
+        </select><br>
+        
+        <label for="weight-zone">Ландшафтная зона:</label>
+        <select id="weight-zone">
+            <option value="0">0</option>
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+
+        </select><br><br>
+        
         <button id="update-map">Обновить карту</button>
+
         <button id="switch-map">Построить карту зонирования зон</button>
 
         <h3>Построить карту плотности</h3>
@@ -123,13 +172,34 @@
     </div>
 
     <script>
-        $(document).ready(function() {
-            $("#update-map").click(function() {
-                let businessType = $("#business-type").val();
-                $.post("/update_map", { business: businessType }, function(data) {
-                    $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime());
-                });
-            });
+        document.getElementById("update-map").addEventListener("click", function () {
+        const businessType = document.getElementById("business-type").value;
+        const weights = {
+        other_object_count_score: document.getElementById("weight-other").value,
+        distance_to_route_score: document.getElementById("weight-distance").value,
+        landmark_count_score: document.getElementById("weight-landmark").value,
+        object_count_score: document.getElementById("weight-density").value,
+        degree_landshaft_zone_score: document.getElementById("weight-zone").value
+    };
+
+    fetch("/update_map", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            business: businessType,
+            weights: weights
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.map_file) {
+            document.getElementById("map-frame").src = "/static/" + data.map_file;
+        }
+    });
+
+
 
             $("#switch-map").click(function() {
                 $.post("/switch_map", function(data) {

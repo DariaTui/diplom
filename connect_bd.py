@@ -155,6 +155,18 @@ def choose_obj(type_obj):
     # Фильтруем по границам Ольхонского района
     return filter_olkhon(df)
 
+def select_pl_services():
+    query="select * from service_pl_olkhon;"
+    pd_data = pd.read_sql(query,connection)
+    df = pd_data[["id",'type','category','isFree']]
+
+    df_id = df["id"].values.tolist()
+    df_type = df["type"].values.tolist()
+    df_category = df["category"].values.tolist()
+    df_isFree = df["isFree"].values.tolist()
+
+    return df_id, df_type, df_category, df_isFree
+
 df_id, df_lat, df_lon, name_obj, type_obj = select_sights()
 
 df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons, df_cat_midprice, df_cat_kitchen, df_cat_rating = select_caterings()

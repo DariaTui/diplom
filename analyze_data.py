@@ -1,6 +1,10 @@
 import numpy as np
 import pandas as pd
-    
+import matplotlib.pyplot as plt
+import seaborn as sns
+from collections import Counter
+from connect_bd import df_pl_cons, df_cat_pros, df_cat_cons, df_cat_pros    
+
 def minmax_normalize_data(data, column_name=None):
     if column_name == "degree_landshaft_zone":
         result = np.zeros(len(data))
