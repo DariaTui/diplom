@@ -13,8 +13,6 @@ import string
 import pandas as pd
 from connect_bd import connection
 
-
-
 TABLES = {
     "catering": {"catering_olkhon"},
     "placement": {"placement_location_olkhon_test"},

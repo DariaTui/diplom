@@ -165,7 +165,7 @@ def main(df1, df2, gdf, weight_zone, business):
         (obj_hex1["distance_to_route_score"] * weight_zone["distance_to_route_score"]) +
         (obj_hex1["landmark_count_score"] * weight_zone["landmark_count_score"]) -
         (obj_hex1["object_count_score"] * weight_zone["object_count_score"])
-    ) * (obj_hex1["degree_landshaft_zone_score"] * weight_zone["degree_landshaft_zone_score"])
+    ) * (obj_hex1["degree_landshaft_zone_score"])
     print("From file main ",(obj_hex1["other_object_count_score"] * weight_zone["other_object_count_score"]))
     print("From file main ",weight_zone)
     #нормализация КБС
