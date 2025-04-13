@@ -5,6 +5,7 @@ import seaborn as sns
 from collections import Counter
 from connect_bd import connection  
 import wordcloud
+import os
 
 def minmax_normalize_data(data, column_name=None):
     if column_name == "degree_landshaft_zone":
@@ -35,18 +36,18 @@ def corr_data(data, column_name=None):
     return data.corr()
 
 
-def generate_wordcloud(category, phrase_type):
-    table_name = "reviews_caterings" if category == "catering" else "reviews_pl_olkhon"
+# def generate_wordcloud(category, phrase_type):
+#     table_name = "reviews_caterings" if category == "public_eating" else "accommodation_places"
 
-    try:
-        query = f"SELECT {phrase_type} FROM {table_name} WHERE {phrase_type} IS NOT NULL"
-        df = pd.read_sql(query, connection)
-        print(df)
-    except Exception as e:
-        return (f"Ошибка загрузки данных из БД: {e}")
+#     try:
+#         query = f"SELECT {phrase_type} FROM {table_name} WHERE {phrase_type} IS NOT NULL"
+#         df = pd.read_sql(query, connection)
+#         print(df)
+#     except Exception as e:
+#         return (f"Ошибка загрузки данных из БД: {e}")
 
-    if df.empty:
-        return ("Нет данных для отображения облака слов.")
+#     if df.empty:
+#         return ("Нет данных для отображения облака слов.")
     
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
@@ -64,24 +65,29 @@ def generate_wordcloud(category, phrase_type):
     if df.empty:
         return "Нет данных для отображения облака слов."
 
-    # Разделение фраз по запятым, очистка пробелов и создание общего текста
+    # Обработка текста
     all_phrases = df[phrase_type].dropna().astype(str)
     words = []
 
     for phrase in all_phrases:
-        words.extend([word.strip() for word in phrase.split(',') if word.strip()])
+        parts = phrase.split(',')
+        cleaned = [p.strip() for p in parts if p.strip()]
+        words.extend(cleaned)
 
-    # Объединение слов в одну строку для wordcloud
     text = ' '.join(words)
 
     # Генерация облака слов
-    wordcloud = WordCloud(width=800, height=400, background_color='white', font_path='arial', collocations=False).generate(text)
+    wordcloud = WordCloud(
+        width=800, height=400, background_color='white',
+        font_path='arial', collocations=False
+    ).generate(text)
 
-    # Отображение облака
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
-    plt.title("Облако слов")
-    plt.show()
+    # Путь для сохранения картинки
+    output_path = os.path.join('static', 'wordcloud.png')
+    os.makedirs('static', exist_ok=True)  # Создание папки, если не существует
 
-generate_wordcloud("catering", "cons")
+    wordcloud.to_file(output_path)
+
+    return f"Облако слов сохранено в {output_path}"
+
+generate_wordcloud("catering", "pros")

@@ -165,12 +165,30 @@
         </div>
 
         <button id="density-map">Отобразить</button>
+
+        <!--wordcloud-->
+    <div class="wordcloud-container">
+        <div>
+        <h3>Создание облака слов</h3>
+        <select id="business-type-wordcloud">
+            <option value="public_eating">Общественное питание</option>
+            <option value="accommodation_places">Место размещения</option>
+        </select>
+        <h3>Тип отзывов</h3>
+        <select id="type-phrase">
+            <option value="pros">Положительные</option>
+            <option value="cons">Отрицательные</option>
+        </select>
+        </div>
+        <button id="wordcloud-button">Создать облако слов</button>
+    </div>
     </div>
 
     <div class="map-container">
         <iframe id="map-frame" src="{{ url_for('static', filename=map_file) }}"></iframe>
     </div>
 
+    
     <script>
         document.getElementById("update-map").addEventListener("click", function () {
         const businessType = document.getElementById("business-type").value;

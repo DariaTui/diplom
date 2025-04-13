@@ -9,10 +9,14 @@ sys.path.append(r'C:\Users\User\Desktop\studyyy\diplom\coding\diplom')
 from main import filter_type
 from zoning_olkhon import zone_olkhon
 from density_obj import density_map_function
+from analyze_data import generate_wordcloud
 
 app = Flask(__name__)
 
 
+# def create_wordcloud(business_type, phrase_type):
+#     wordcloud_png = generate_wordcloud(business_type, phrase_type)
+#     return wordcloud_png
 
 def create_map(business_type, weights):
     map_object = filter_type(business=business_type, weights=weights)
