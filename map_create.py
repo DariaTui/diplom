@@ -6,7 +6,7 @@ def create_maps(name_map,m):
         os.makedirs("static")
 
     # Сохраняем карту
-    file_path = os.path.join(name_map)
+    file_path = os.path.join("static", name_map)
     m.save(file_path)
     return m
     # Открываем карту через абсолютный путь

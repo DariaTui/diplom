@@ -2,25 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from collections import Counter, defaultdict
-
-import dash
-from dash import dcc, html, Input, Output
-import plotly.graph_objs as go
-from connect_bd import connection
-
+from collections import Counter
 from connect_bd import df_pl_cons, df_cat_pros, df_cat_cons, df_cat_pros    
-
-from wordcloud import WordCloud
-import io
-import base64
-
-import pymorphy2
-import re
-
-
-
-
 
 def minmax_normalize_data(data, column_name=None):
     if column_name == "degree_landshaft_zone":
@@ -50,5 +33,4 @@ def minmax_normalize_data(data, column_name=None):
 def corr_data(data, column_name=None):
     return data.corr()
 
-#Создание дашборда
 
