@@ -88,6 +88,6 @@ def generate_wordcloud(category, phrase_type):
 
     wordcloud.to_file(output_path)
 
-    return f"Облако слов сохранено в {output_path}"
+    return output_path
 
-generate_wordcloud("catering", "pros")
+print(generate_wordcloud("catering", "pros"))

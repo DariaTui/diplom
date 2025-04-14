@@ -14,9 +14,14 @@ from analyze_data import generate_wordcloud
 app = Flask(__name__)
 
 
-# def create_wordcloud(business_type, phrase_type):
-#     wordcloud_png = generate_wordcloud(business_type, phrase_type)
-#     return wordcloud_png
+def create_wordcloud(business_type, phrase_type):
+    file_name = f"wordcloud_{business_type}_{phrase_type}.png"
+    file_path = os.path.join("static", file_name)
+
+    path = generate_wordcloud(business_type, phrase_type)
+
+    return path
+
 
 def create_map(business_type, weights):
     map_object = filter_type(business=business_type, weights=weights)
@@ -83,6 +88,19 @@ def density_map():
     map_path = create_density_map(type_obj, type_business, price, rating, kitchen)
     
     return jsonify({'map_file': map_path})
+
+@app.route("/create_wordcloud", methods=["POST"])
+def create_wordcloud_endpoint():
+    data = request.get_json()
+    business_type = data.get("business_type")
+    phrase_type = data.get("phrase_type")
+
+    # Функция должна возвращать только имя файла, например: "wordcloud.png"
+    try:
+        wordcloud_file = create_wordcloud(business_type, phrase_type)
+        return jsonify({"wordcloud_path": wordcloud_file})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

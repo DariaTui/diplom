@@ -1,23 +1,105 @@
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
+/* Базовые стили */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5faff;
+    color: #333;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-#mapid {
-    border: 1px solid #ccc;
-    border-radius: 5px;
+/* Контейнеры */
+.form-container {
+    width: 35%;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    max-height: 90vh;
 }
 
-#business-form {
+.map-container {
+    flex-grow: 1;
+    background: #ffffff;
+    border-radius: 12px;
     padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    display: inline-block;
-    vertical-align: top;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
 }
 
-#switcher {
-    margin-top: 20px;
+/* Заголовки */
+h3, h4 {
+    color: #007acc;
+    margin-bottom: 10px;
+}
+
+/* Селекты и лейблы */
+label {
+    display: block;
+    margin-top: 10px;
+    font-weight: 500;
+    color: #333;
+}
+
+select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #cce4f6;
+    border-radius: 6px;
+    background: #f0f8ff;
+    margin-top: 5px;
+}
+
+/* Кнопки */
+button {
+    background-color: #007acc;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #005fa3;
+}
+
+button:active {
+    background-color: #004f8a;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+}
+
+/* Скрытые блоки */
+.hidden {
+    display: none;
+}
+
+/* Облако слов */
+.wordcloud-container {
+    margin-top: 30px;
+    background: #f7fbff;
+    border: 1px solid #cce4f6;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.wordcloud-container img {
+    max-width: 100%;
+    margin-top: 10px;
+    border-radius: 10px;
 }

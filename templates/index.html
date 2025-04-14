@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <title>Система поддержки решений</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
+    <!-- <style>
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -31,7 +32,7 @@
         .hidden {
             display: none;
         }
-    </style>
+    </style> -->
 </head>
 <body>
 
@@ -278,8 +279,40 @@
                 $.post("/density_map", filterData, function(data) {
                     $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime());
                 });
+            
             });
         });
+
+
+        //обработчик для облака слов
+        document.getElementById("wordcloud-button").addEventListener("click", function () {
+    const businessType = document.getElementById("business-type-wordcloud").value;
+    const phraseType = document.getElementById("type-phrase").value;
+
+    fetch("/create_wordcloud", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            business_type: businessType,
+            phrase_type: phraseType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.wordcloud_path) {
+            // Вставляем или обновляем картинку на странице
+            let img = document.getElementById("wordcloud-img");
+            if (!img) {
+                img = document.createElement("img");
+                img.id = "wordcloud-img";
+                document.querySelector(".wordcloud-container").appendChild(img);
+            }
+            img.src = data.wordcloud_path + "?v=" + new Date().getTime(); // чтобы не кешировалось
+        }
+    });
+});
     </script>
 
 </body>
