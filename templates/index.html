@@ -6,36 +6,20 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <title>Система поддержки решений</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: space-between;
-            padding: 20px;
-        }
-        .form-container {
-            width: 30%;
-        }
-        .map-container {
-            width: 65%;
-        }
-        iframe {
-            width: 100%;
-            height: 500px;
-            border: none;
-        }
-        button {
-            margin-top: 10px;
-            padding: 10px;
-            cursor: pointer;
-        }
-        .hidden {
-            display: none;
-        }
-    </style> -->
 </head>
 <body>
 
+<!-- Кнопка справки с иконкой -->
+<button id="help-button" title="Справка">?</button>
+
+<!-- Модальное окно -->
+<div id="help-modal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-button">&times;</span>
+    <h2>Справочная информация</h2>
+    <p>Здесь вы можете выбрать тип бизнеса, задать веса для различных факторов, применить фильтры и построить карту. Также доступна генерация облака слов на основе отзывов.</p>
+  </div>
+</div>
     <div class="form-container">
         <h3>Выберите тип бизнеса</h3>
         <select id="business-type">
@@ -217,9 +201,6 @@
             document.getElementById("map-frame").src = "/static/" + data.map_file;
         }
     });
-
-
-
             $("#switch-map").click(function() {
                 $.post("/switch_map", function(data) {
                     $("#map-frame").attr("src", data.map_file + "?v=" + new Date().getTime());
@@ -313,7 +294,23 @@
         }
     });
 });
-    </script>
 
+// Открытие и закрытие справочного окна
+document.getElementById("help-button").addEventListener("click", function () {
+    document.getElementById("help-modal").style.display = "block";
+});
+
+document.querySelector(".close-button").addEventListener("click", function () {
+    document.getElementById("help-modal").style.display = "none";
+});
+
+// Закрытие при клике вне окна
+window.addEventListener("click", function (event) {
+    const modal = document.getElementById("help-modal");
+    if (event.target === modal) {
+        modal.style.display = "none";
+    }
+});
+    </script>
 </body>
 </html>
