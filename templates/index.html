@@ -28,25 +28,26 @@
         </select>
         
         <h3>Настройка весовых коэффициентов (от 0 до 3)</h3>
-        
+        <div class="select-grid">
+        <!-- <div class="select-pair"> -->
         <label for="weight-other">Инфраструктурные объекты:</label>
         <select id="weight-other">
             <option value="0">0</option>
             <option value="1" selected>1</option>
             <option value="2">2</option>
             <option value="3">3</option>
-
-        </select><br>
-        
+        </select>
+        <!-- </div> -->
+        <!-- <div class="select-pair"> -->
         <label for="weight-distance">Расстояние до маршрута:</label>
         <select id="weight-distance">
             <option value="0">0</option>
             <option value="1" selected>1</option>
             <option value="2">2</option>
             <option value="3">3</option>
-
-        </select><br>
-        
+        </select>
+        <!-- </div> -->
+        <!-- <div class="select-pair"> -->
         <label for="weight-landmark">Достопримечательности:</label>
         <select id="weight-landmark">
             <option value="0">0</option>
@@ -54,29 +55,30 @@
             <option value="2">2</option>
             <option value="3">3</option>
 
-        </select><br>
-        
+        </select>
+        <!-- </div> -->
+        <!-- <div class="select-pair"> -->
         <label for="weight-density">Плотность конкурентов:</label>
         <select id="weight-density">
             <option value="0">0</option>
             <option value="1" selected>1</option>
             <option value="2">2</option>
             <option value="3">3</option>
-
-        </select><br>
-        
+        </select>
+        <!-- </div> -->
+        <!-- <div class="select-pair"> -->
         <label for="weight-zone">Ландшафтная зона:</label>
         <select id="weight-zone">
             <option value="0">0</option>
             <option value="1" selected>1</option>
             <option value="2">2</option>
             <option value="3">3</option>
-
-        </select><br><br>
-        
+        </select>
+        <!-- <div> -->
+        </div>
         <button id="update-map">Обновить карту</button>
 
-        <button id="switch-map">Построить карту зонирования зон</button>
+        <button id="switch-map">Построить карту ландшафта</button>
 
         <h3>Построить карту плотности</h3>
         <select id="density_obj">
