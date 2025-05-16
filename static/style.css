@@ -1,9 +1,9 @@
 /* Базовые стили */
 body {
     margin: 0;
-    padding: 20px;
+    padding: 10px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f5faff;
+    background-color: #f0f0f0;
     color: #333;
     display: flex;
     flex-direction: row;
@@ -12,13 +12,10 @@ body {
     flex-wrap: wrap;
 }
 
+
 /* Контейнеры */
 .form-container {
     flex: 1 1 350px;
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -29,12 +26,16 @@ body {
 
 .map-container {
     flex: 2 1 600px;
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 10px;
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
     min-width: 280px;
     height: 100%;
+}
+.form-container, .map-container {
+    background-color: #ffffff;
+    border: 1px solid #cccccc;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
 
 .select-grid {
@@ -47,47 +48,48 @@ body {
 
 /* Заголовки */
 h3, h4 {
-    color: #007acc;
-    margin-bottom: 10px;
+    color: #222222;
+    font-weight: 600;
+    margin-bottom: 0px;
 }
 
 /* Селекты и лейблы */
 label {
     display: block;
-    margin-top: 10px;
+    margin-top: 0px;
     font-weight: 500;
-    color: #333;
+    color: #333333;
 }
 
 select {
     width: 100%;
     padding: 8px;
-    border: 1px solid #cce4f6;
-    border-radius: 6px;
-    background: #f0f8ff;
-    margin-top: 5px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: #ffffff;
+    margin-top: 0px;
 }
+
 
 /* Кнопки */
 button {
-    background-color: #007acc;
-    color: white;
+    background-color: #0066cc;
+    color: #ffffff;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     padding: 10px 16px;
     font-size: 14px;
     margin-top: 10px;
+    cursor: pointer;
     transition: background-color 0.3s ease;
-    width: 100%;
-    box-sizing: border-box;
 }
 
 button:hover {
-    background-color: #005fa3;
+    background-color: #005bb5;
 }
 
 button:active {
-    background-color: #004f8a;
+    background-color: #004c99;
 }
 
 iframe {
@@ -118,74 +120,83 @@ iframe {
 }
 
 /* Стили модального окна */
-.modal {
-    display: none; 
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 600px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    position: relative;
-}
-
-.close-button {
-    color: #aaa;
-    position: absolute;
-    right: 15px;
-    top: 10px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close-button:hover {
-    color: #000;
-}
-
+/* Кнопка справки */
 #help-button {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 50%;
-    font-size: 24px;
-    font-weight: bold;
     cursor: pointer;
+    z-index: 1000;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    z-index: 1001;
-    transition: background-color 0.3s ease;
 }
 
-#help-button:hover {
-    background-color: #0056b3;
+/* Модальное окно */
+.modal {
+    display: none; /* Скрыто по умолчанию */
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    width: 300px;
+    max-height: 400px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    z-index: 1001;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
+    padding: 15px;
+    font-size: 14px;
 }
+
+/* Скрытый класс */
+.hidden {
+    display: none;
+}
+
+/* Кнопка закрытия */
+.close-button {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+}
+
+/* Заголовки внутри модалки */
+.modal-content h2, .modal-content h3 {
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
+.modal-content p, .modal-content ul {
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.modal-content ul {
+    padding-left: 18px;
+}
+
+.modal-content li {
+    margin-bottom: 6px;
+}
+
 
 /* Адаптивность */
 @media (max-width: 768px) {
-    body {
-        flex-direction: column;
-    }
-
     .form-container, .map-container {
         width: 100%;
-        max-width: 100%;
+        margin-bottom: 20px;
     }
 
     iframe {
