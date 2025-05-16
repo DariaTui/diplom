@@ -20,14 +20,12 @@ from zoning_olkhon import gdfVec
 business = 'общественное питание'
 size_poligon = 8
 zoom=9
-#add to app.py!!!!!!!!!!!!!!!
+
 place = "остров Ольхон"
 gdf = ox.geocode_to_gdf(place, which_result=1)
 m = folium.Map([gdf.centroid.y, gdf.centroid.x])
-#############!!!!!!!!!!!
 
 olhon_hex = gdf.h3.polyfill_resample(size_poligon)
-# df_landmark_olkhon = pd.DataFrame({"id": df_id, "lat": df_lat, "lng": df_lon, "name": name_obj})
 
 transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
 
@@ -40,7 +38,7 @@ weights = {
 }
 
 def load_routes():
-    file_path = "datas/qgis/routes_Baikal.geojson"
+    file_path = "C:/Users/User/Desktop/studyyy/diplom/coding/diplom/datas/qgis/routes_Baikal.geojson"
     return gpd.read_file(file_path)
 
 def calculate_distance_to_routes(polygon, routes_gdf):
@@ -92,14 +90,22 @@ def create_geometry(df, size_poligon, full_hex):
 def get_color(z_score):
     if pd.isna(z_score):
         return "gray"  # Серые полигоны для пустых ячеек
-    elif z_score > 0.67:
-        return "red"
+    elif z_score > 0.9:
+        return "#960e05" #red
+    elif z_score > 0.8:
+        return "#f21000" #red
+    elif z_score > 0.70:
+        return "#f22c00" #red
+    elif z_score > 0.60:
+        return "#f24900" #red
+    elif z_score > 0.4:
+        return "#f27500" #red
     elif z_score == 0:
         return "gray"
-    elif z_score < 0.33:
-        return "yellow"
+    elif z_score < 0.30:
+        return "#fff703" 
     else:
-        return "green"
+        return "#ffab03"
 
 # Функция для генерации легенды
 def add_legend(map_object):
@@ -118,21 +124,21 @@ def add_legend(map_object):
         border-radius: 5px;
     ">
       <b>Легенда</b><br>
-
-      <i style="background: red; width: 20px; height: 10px; display: inline-block;"></i> Высокий КБС<br>
-      <i style="background: yellow; width: 20px; height: 10px; display: inline-block;"></i> Низкий КБС<br>
-      <i style="background: green; width: 20px; height: 10px; display: inline-block;"></i> Средний КБС<br>
+      <i style="background: #960e05; width: 20px; height: 10px; display: inline-block;"></i> КБС более 0.9<br>
+      <i style="background: #f21000; width: 20px; height: 10px; display: inline-block;"></i> КБС более 0.8<br>
+      <i style="background: #f22c00; width: 20px; height: 10px; display: inline-block;"></i> КБС более 0.7<br>
+      <i style="background: #f24900; width: 20px; height: 10px; display: inline-block;"></i> КБС более 0.6<br>
+      <i style="background: #f27500; width: 20px; height: 10px; display: inline-block;"></i> КБС более 0.4<br>
+      <i style="background: #ffab03; width: 20px; height: 10px; display: inline-block;"></i> КБС более 0.3<br>
+      <i style="background: #fff703; width: 20px; height: 10px; display: inline-block;"></i> КБС менее 0.3<br>
       <i style="background: grey; width: 20px; height: 10px; display: inline-block;"></i> Недоступная местность<br>
 
     </div>
     '''
     map_object.get_root().html.add_child(folium.Element(legend_html))
 
-
-
-
 def main(df1, df2, gdf, weight_zone, business):
-    
+
     full_hex = pd.DataFrame({"h3_8": olhon_hex.index})
 
     obj_hex1 = create_geometry(df1, size_poligon, full_hex)
@@ -155,10 +161,10 @@ def main(df1, df2, gdf, weight_zone, business):
         'degree_landshaft_zone': obj_hex1["degree_landshaft_zone"],
         'degree_favorability':0
     })
-    
+
     for column in normalization_data.columns:
         obj_hex1[f"{column}_score"] = minmax_normalize_data(normalization_data[column].values, column_name=column)
-           
+
     # Подсчет коэффициента благоприятствования
     obj_hex1["degree_favorability_score"] = (
         (obj_hex1["other_object_count_score"] * weight_zone["other_object_count_score"]) -
@@ -166,11 +172,9 @@ def main(df1, df2, gdf, weight_zone, business):
         (obj_hex1["landmark_count_score"] * weight_zone["landmark_count_score"]) -
         (obj_hex1["object_count_score"] * weight_zone["object_count_score"])
     ) * (obj_hex1["degree_landshaft_zone_score"] * weight_zone["degree_landshaft_zone_score"])
-    print("From file main ",(obj_hex1["other_object_count_score"] * weight_zone["other_object_count_score"]))
-    print("From file main ",weight_zone)
+
     #нормализация КБС
     obj_hex1["degree_favorability_score"]=minmax_normalize_data(obj_hex1["degree_favorability_score"].values,column_name="degree_favorability_score")
- 
 
     m = folium.Map(location=[gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()], zoom_start=zoom)
     folium.GeoJson(olhon_hex, color="green").add_to(m)
@@ -193,19 +197,11 @@ def main(df1, df2, gdf, weight_zone, business):
     add_legend(m)
     return m
 
-# def choose_business(business):
-#     if business == "public_eating":
-#         return pd.DataFrame({"id": df_cat_id, "lat": df_cat_lat, "lng": df_cat_lon, "name": name_cat_obj, "pros": df_cat_pros, "cons": df_cat_cons})
-#     if business == "accommodation_places":
-#         return pd.DataFrame({"id": df_pl_id, "lat": df_pl_lat, "lng": df_pl_lon, "name": name_pl_obj, "pros": df_pl_pros, "cons": df_pl_cons})
-
 def filter_type(weights, gdf=gdf, business="public_eating"):
     df1 = choose_obj(business)
     df2 = choose_obj("public_eating" if business == "accommodation_places" else "accommodation_places")
     m = main(df1, df2, gdf, weights, business)
     file_html = create_maps("kbs_map.html", m)
     return file_html
-
-
 
 filter_type(weights=weights)
