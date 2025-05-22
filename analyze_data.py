@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import Counter
 from connect_bd import connection  
-import wordcloud
 import os
+from wordcloud import WordCloud
 
 def minmax_normalize_data(data, column_name=None):
     if column_name == "degree_landshaft_zone":
@@ -34,24 +34,6 @@ def minmax_normalize_data(data, column_name=None):
 
 def corr_data(data, column_name=None):
     return data.corr()
-
-
-# def generate_wordcloud(category, phrase_type):
-#     table_name = "reviews_caterings" if category == "public_eating" else "accommodation_places"
-
-#     try:
-#         query = f"SELECT {phrase_type} FROM {table_name} WHERE {phrase_type} IS NOT NULL"
-#         df = pd.read_sql(query, connection)
-#         print(df)
-#     except Exception as e:
-#         return (f"Ошибка загрузки данных из БД: {e}")
-
-#     if df.empty:
-#         return ("Нет данных для отображения облака слов.")
-    
-from wordcloud import WordCloud
-import matplotlib.pyplot as plt
-import pandas as pd
 
 def generate_wordcloud(category, phrase_type):
     table_name = "reviews_caterings" if category == "catering" else "reviews_pl_olkhon"
@@ -84,10 +66,8 @@ def generate_wordcloud(category, phrase_type):
 
     # Путь для сохранения картинки
     output_path = os.path.join('static', 'wordcloud.png')
-    os.makedirs('static', exist_ok=True)  # Создание папки, если не существует
+    os.makedirs('static', exist_ok=True) 
 
     wordcloud.to_file(output_path)
 
     return output_path
-
-print(generate_wordcloud("catering", "pros"))

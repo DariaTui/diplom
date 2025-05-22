@@ -12,7 +12,9 @@ body {
     flex-wrap: wrap;
 }
 
-
+#name-system {
+    text-align: center;
+}
 /* Контейнеры */
 .form-container {
     flex: 1 1 350px;
