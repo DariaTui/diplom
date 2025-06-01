@@ -3,7 +3,7 @@
 ## Content
   <dl>
   <dt>System concept</dt>
-  <dt>Building a FNR map</dt>
+  <dt>Building a KBS map</dt>
     <dd>What's is it</dd>
     <dd>Setting the weights for the coefficient parameters</dd>
   <dt>Building a landscape map</dt>
@@ -13,19 +13,24 @@
 
 ### Resume
 
-- EDUCATION: student of IGU FBKI, Pyramid
-Architectural School
+-In recent decades, tourism has become one of the fastest
+growing industries in the Irkutsk region. Small and medium
+-sized enterprises (SMEs) in the tourism sector play a key role in
+providing a variety of services and attracting customers, contributing
+to the economic growth of the Irkutsk region, job creation and the development
+of local communities. However, despite this, entrepreneurs in this
+field face a number of difficult tasks related to market analysis,
+location selection, target audience identification and optimization.
+business processes. Making informed decisions in conditions
+of uncertainty and limited resources requires the use of modern
+technologies that can significantly improve work efficiency.
 
-- PROFESSIONAL SKILLS: Knowledge of a foreign
-language (English, Chinese), teamwork skills,
-striving for professional growth, sociability,
-responsible attitude to work.
-
-- Ownership: Adobe Photoshop, InDesign.
-Illustrator, CorelDRAW, Microsoft Word ,
-Python, PHP, JavaScript
-
-## My 1 course
-### Network content markup languages
-#### Interactive Cards
+### KBS map
+-This system includes the following tools:
+1. The calculation of the favored-nation ratio (KBS) is an aggregated indicator calculated on the basis
+of a number of spatial factors that determine the attractiveness of a location
+for entrepreneurial activity.:
+KBS = (number of infrastructure facilities −
+distance to the route + number of attractions −
+number of competitors) × degree of landscape area
 ![karti](https://github.com/DariaTui/Network-content-markup-languages/blob/main/cards/cards/karti.gif)
