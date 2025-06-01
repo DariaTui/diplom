@@ -4,6 +4,7 @@ import folium
 import os
 import sys
 from map_create import create_maps
+
 # Добавляем пути к модулям
 sys.path.append(r'C:\Users\User\Desktop\studyyy\diplom\coding\diplom')
 from main import filter_type
@@ -13,15 +14,11 @@ from analyze_data import generate_wordcloud
 
 app = Flask(__name__)
 
-
 def create_wordcloud(business_type, phrase_type):
     file_name = f"wordcloud_{business_type}_{phrase_type}.png"
     file_path = os.path.join("static", file_name)
-
     path = generate_wordcloud(business_type, phrase_type)
-
     return path
-
 
 def create_map(business_type, weights):
     map_object = filter_type(business=business_type, weights=weights)
@@ -83,8 +80,6 @@ def density_map():
     price = request.form.get("price")
     rating = request.form.get("rating")
     kitchen = request.form.get("cuisine")  # Для общепита
-
-    # Создаём карту
     map_path = create_density_map(type_obj, type_business, price, rating, kitchen)
     
     return jsonify({'map_file': map_path})
@@ -94,8 +89,6 @@ def create_wordcloud_endpoint():
     data = request.get_json()
     business_type = data.get("business_type")
     phrase_type = data.get("phrase_type")
-
-    # Функция должна возвращать только имя файла, например: "wordcloud.png"
     try:
         wordcloud_file = create_wordcloud(business_type, phrase_type)
         return jsonify({"wordcloud_path": wordcloud_file})

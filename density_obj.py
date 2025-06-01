@@ -30,7 +30,6 @@ place = "остров Ольхон"
 gdf = ox.geocode_to_gdf(place, which_result=1) 
 # Создаем карту
 m = folium.Map([gdf.centroid.y, gdf.centroid.x])
-
 olhon_hex = gdf.h3.polyfill_resample(size_poligon)
 # достопримечатеельности
 
@@ -56,11 +55,8 @@ def create_geometry(df, size_poligon, full_hex):
     except:
         return obj_hex 
 
-    
-
 # Цветовые градиенты (можно изменить под себя)
 COLOR_MAP = {
-
     "низкая": "#fecc5c",  # Оранжевый
     "средняя": "#ff6c56",  # Красный
     "высокая": "#bd0026"  # Темно-красный
@@ -146,7 +142,7 @@ def main(df, gdf=gdf):
 def markers_obj(map,df):
     # Вывод маркеров мест на карту
     for index, rows in df.iterrows():
-        if df is "df_cat_olkhon": #or df == df_pl_olkhon:
+        if df is "df_cat_olkhon":
             popup_text = f"""
             <b>{rows["name"]}</b><br>
             <b>Плюсы:</b> {rows["pros"] if pd.notna(rows["pros"]) else "Нет данных"}<br>
@@ -220,11 +216,8 @@ def density_map_function(gdf=gdf, type_obj="", type_business="", price='', ratin
                 df = df[(df["rating"] >= min_rating) & (df["rating"] <= max_rating)]
             except ValueError:
                 pass
-    
     # landmarks фильтров не имеет, просто передаем df в main
-    
     m = main(df, gdf)
-
     if m != "":
         return create_maps(f"{type_obj}_density.html", m)
     else:
@@ -238,10 +231,3 @@ density_map_function(
     rating="", 
     kitchen=""
 )
-
-
-# density_map_function(gdf=gdf, type_obj="public_eating", type_business="Кафе", price="", rating="", kitchen="")
-#print(filter_type(df_olkhon,type_obj, type_business,m))
-#print(filter_type(df_pl_olkhon,gdf,type_obj,type_business,m))
-#print(density_map_function(gdf=gdf, type_obj="public_eating", type_business="Пиццерия", price="1000-2000", rating="4.5-5.0", kitchen="бурятская"))
-#webbrowser.open("static\\"+f"{type_obj}_density.html")

@@ -45,8 +45,6 @@ def splitting_types(df, keywords):
             type_obj[id_i] = ",".join(word.strip() for word in i.split(","))  # Убираем пробелы и соединяем обратно через запятую
         else:
             type_obj[id_i] = i.strip()  # Убираем пробелы из одиночных значений
-
-    
     return type_obj
 
 def clean_kitchen_column(df):
@@ -112,8 +110,6 @@ def select_sights():
     type_obj = splitting_types(df, keywords_sights)
     return df_id, df_lat, df_lon, name_obj, type_obj
 
-
-
 connection = pymysql.connect(
             host="localhost",
             user="root",
@@ -121,18 +117,13 @@ connection = pymysql.connect(
             database="tourism"
         )
 
-
 def filter_olkhon(df):
-    """
-    Фильтрует DataFrame, удаляя строки, в которых координаты lat/lng выходят за пределы Ольхонского района.
-    """
     # Границы острова Ольхон
     min_lat, max_lat = 53.05, 53.42
     min_lng, max_lng = 106.97, 108.76
     
     # Фильтрация DataFrame
     df_filtered = df[(df['lat'].between(min_lat, max_lat)) & (df['lng'].between(min_lng, max_lng))]
-    
     return df_filtered
 
 def choose_obj(type_obj):
@@ -173,4 +164,3 @@ df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_c
 
 df_pl_id, df_pl_lat, df_pl_lon, name_pl_obj,df_pl_pros, df_pl_cons, df_pl_minprice, df_pl_rating = select_pl()
 
-#print(df_cat_id, df_cat_lat, df_cat_lon, name_cat_obj, type_cat_obj, df_cat_pros, df_cat_cons, df_cat_midprice, df_cat_kitchen, df_cat_rating)

@@ -18,6 +18,4 @@ def create_routes():
         geo_json.add_to(m)
 
     return m
-
-
 create_maps(file_name,m)

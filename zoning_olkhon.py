@@ -33,7 +33,6 @@ def zone_olkhon():
     for _, row in gdfVec.iterrows():
         zone_number = row["number"]  # Получаем номер зоны
         tooltip_text = prefer_tourism.get(zone_number, "Неизвестная зона")  # Получаем текст для tooltip
-
         color = color_map.get(row["number"], "gray")  # Цвет по степени важности
 
         folium.GeoJson(
@@ -47,7 +46,5 @@ def zone_olkhon():
             tooltip=tooltip_text  # Добавляем всплывающую подсказку
         ).add_to(m)
     return m
-# Сохранение и открытие карты
-#m.save("mapVector.html")
-#webbrowser.open("mapVector.html")
+
 

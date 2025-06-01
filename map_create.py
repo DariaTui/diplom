@@ -9,5 +9,3 @@ def create_maps(name_map,m):
     file_path = os.path.join("static", name_map)
     m.save(file_path)
     return m
-    # Открываем карту через абсолютный путь
-    #webbrowser.open(f"file://{os.path.abspath(file_path)}")
